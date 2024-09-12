@@ -1,8 +1,12 @@
 import React, { useEffect, useState } from "react";
 import { styled } from "styled-components";
 import Filters from "../components/Filters";
+import AddAgent from "../components/AddAgent";
+import { Link } from "react-router-dom";
 
 const AllListing: React.FC = () => {
+  const [active, setActive] = useState<boolean>(false);
+
   const [listings, setListings] = useState([
     {
       id: 1,
@@ -115,35 +119,35 @@ const AllListing: React.FC = () => {
 
   const regionIds = allFilters.region.map((item) => item.id);
 
-  useEffect(() => {
-    // const filters = localStorage.getItem("filters");
-    // if (filters) {
-    //   const savedFilters: AllFilters = JSON.parse(filters);
-    //   setAllFilters(...savedFilters);
-    // }
-    console.log("Remounted");
-  }, []);
+  // useEffect(() => {
+  //   // const filters = localStorage.getItem("filters");
+  //   // if (filters) {
+  //   //   const savedFilters: AllFilters = JSON.parse(filters);
+  //   //   setAllFilters(...savedFilters);
+  //   // }
+  //   console.log("Remounted");
+  // }, []);
 
   //console.log(allFilters);
 
-  console.log(
-    allFilters.region,
-    allFilters.area.min,
-    allFilters.area.max,
-    allFilters.price.min,
-    allFilters.price.max,
-    allFilters.bedrooms
-  );
   return (
     <StyledSection>
+      <AddAgent active={active} setActive={setActive} />
       <StyledContainer>
         <Filters setAllFilters={setAllFilters} allFilters={allFilters} />
         <ButtonsContainer>
-          <AddListingButton>
-            <PlusIcon src="/images/white-cross.png" />
-            ლისტინგის დამატება
-          </AddListingButton>
-          <AddAgentButton>
+          <Link to="/add-listing">
+            <AddListingButton>
+              <PlusIcon src="/images/white-cross.png" />
+              ლისტინგის დამატება
+            </AddListingButton>
+          </Link>
+
+          <AddAgentButton
+            onClick={() => {
+              setActive(true);
+            }}
+          >
             <PlusIcon src="/images/orange-cross.png" />
             აგენტის დამატება
           </AddAgentButton>
