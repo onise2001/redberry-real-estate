@@ -8,3 +8,10 @@ interface Region {
   id: number;
   name: string;
 }
+
+interface AllFilters {
+  region: Region[];
+  area: { min: string; max: string };
+  price: { min: string; max: string };
+  bedrooms: string;
+}

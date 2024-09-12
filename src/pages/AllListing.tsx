@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { styled } from "styled-components";
+import Filters from "../components/Filters";
 
 const AllListing: React.FC = () => {
   const [listings, setListings] = useState([
@@ -36,10 +37,10 @@ const AllListing: React.FC = () => {
       city: {
         id: 1,
         name: "სოხუმი",
-        region_id: 1,
+        region_id: 2,
         region: {
-          id: 1,
-          name: "აფხაზეთი",
+          id: 2,
+          name: "აჭარა",
         },
       },
     },
@@ -56,10 +57,10 @@ const AllListing: React.FC = () => {
       city: {
         id: 1,
         name: "სოხუმი",
-        region_id: 1,
+        region_id: 3,
         region: {
-          id: 1,
-          name: "აფხაზეთი",
+          id: 3,
+          name: "გურია",
         },
       },
     },
@@ -76,10 +77,10 @@ const AllListing: React.FC = () => {
       city: {
         id: 1,
         name: "სოხუმი",
-        region_id: 1,
+        region_id: 4,
         region: {
-          id: 1,
-          name: "აფხაზეთი",
+          id: 4,
+          name: "თბილისი",
         },
       },
     },
@@ -96,81 +97,47 @@ const AllListing: React.FC = () => {
       city: {
         id: 1,
         name: "სოხუმი",
-        region_id: 1,
+        region_id: 5,
         region: {
-          id: 1,
-          name: "აფხაზეთი",
+          id: 5,
+          name: "იმერეთი",
         },
       },
     },
   ]);
 
-  const filters = [
-    "რეგიონი",
-    "საფასო კატეგორია",
-    "ფართობი",
-    "საძინებლების რაოდენობა",
-  ];
-  const [filterToShow, setFilterToShow] = useState<string>("");
+  const [allFilters, setAllFilters] = useState<AllFilters>({
+    region: [],
+    area: { min: "", max: "" },
+    price: { min: "", max: "" },
+    bedrooms: "",
+  });
 
-  const [regions, setRegions] = useState<Region[]>();
+  const regionIds = allFilters.region.map((item) => item.id);
 
   useEffect(() => {
-    const fetchRegions = async () => {
-      const response = await fetch(
-        "https://api.real-estate-manager.redberryinternship.ge/api/regions"
-      );
-      if (response.status === 200) {
-        const data = await response.json();
-        setRegions(data);
-      }
-    };
-    fetchRegions();
+    // const filters = localStorage.getItem("filters");
+    // if (filters) {
+    //   const savedFilters: AllFilters = JSON.parse(filters);
+    //   setAllFilters(...savedFilters);
+    // }
+    console.log("Remounted");
   }, []);
-  console.log(filterToShow);
+
+  //console.log(allFilters);
+
+  console.log(
+    allFilters.region,
+    allFilters.area.min,
+    allFilters.area.max,
+    allFilters.price.min,
+    allFilters.price.max,
+    allFilters.bedrooms
+  );
   return (
     <StyledSection>
       <StyledContainer>
-        <StyledFiltersWrapper>
-          <SingleFilterWrapper
-            onClick={() => {
-              if (filterToShow === filters[0]) {
-                setFilterToShow("");
-              } else {
-                setFilterToShow(filters[0]);
-              }
-            }}
-          >
-            <FilterText>რეგიონი</FilterText>
-            <ArrowIcon src="/images/arrow.png" />
-            <RegionsPopup $active={filterToShow == filters[0]}>
-              <FilterTitle>რეგიონის მიხედვით</FilterTitle>
-              <RegionsContainer>
-                {regions?.map((item) => {
-                  return (
-                    <SingleRegionContainer key={item.id}>
-                      <input type="checkbox" />
-                      {item.name}
-                    </SingleRegionContainer>
-                  );
-                })}
-              </RegionsContainer>
-              <ChooseButton>არჩევა</ChooseButton>
-            </RegionsPopup>
-          </SingleFilterWrapper>
-          <SingleFilterWrapper>
-            <FilterText>საფასო კატეგორია</FilterText>
-            <ArrowIcon src="/images/arrow.png" />
-          </SingleFilterWrapper>
-          <SingleFilterWrapper>
-            <FilterText>ფართობი</FilterText>
-            <ArrowIcon src="/images/arrow.png" />
-          </SingleFilterWrapper>
-          <SingleFilterWrapper>
-            <FilterText>საძინებლები</FilterText>
-            <ArrowIcon src="/images/arrow.png" />
-          </SingleFilterWrapper>
-        </StyledFiltersWrapper>
+        <Filters setAllFilters={setAllFilters} allFilters={allFilters} />
         <ButtonsContainer>
           <AddListingButton>
             <PlusIcon src="/images/white-cross.png" />
@@ -182,41 +149,164 @@ const AllListing: React.FC = () => {
           </AddAgentButton>
         </ButtonsContainer>
       </StyledContainer>
-
-      <ListingsContainer>
-        {listings.map((item) => {
+      <FiltersContainer>
+        {allFilters.region.map((item) => {
           return (
-            <Card key={item.id}>
-              <DealType>
-                {item.is_rental === 0 ? "ქირავდება" : "იყიდება"}
-              </DealType>
-              <CardImg src={item.image} />
-              <CardBody>
-                <Price>{item.price} ₾</Price>
-                <Address>
-                  <img src="/images/location.png" />
-                  {item.address}
-                </Address>
-                <IconsContainer>
-                  <SingleIconContainer>
-                    <img src="/images/bed.png" alt="" />
-                    <IconText>{item.bedrooms}</IconText>
-                  </SingleIconContainer>
-                  <SingleIconContainer>
-                    <img src="/images/area.png" alt="" />
-                    <IconText>
-                      {item.area}მ<sup>2</sup>
-                    </IconText>
-                  </SingleIconContainer>
-                  <SingleIconContainer>
-                    <img src="/images/stake.png" alt="" />
-                    <IconText>{item.zip_code}</IconText>
-                  </SingleIconContainer>
-                </IconsContainer>
-              </CardBody>
-            </Card>
+            <SingleFilterWrapper key={item.id}>
+              <SingleFilterText>{item.name}</SingleFilterText>
+              <CloseIcon
+                src="/images/close.png"
+                onClick={() => {
+                  setAllFilters((prev) => ({
+                    ...prev,
+                    region: allFilters.region.filter(
+                      (reg) => reg.id !== item.id
+                    ),
+                  }));
+                }}
+              />
+            </SingleFilterWrapper>
           );
         })}
+
+        {allFilters.area.min || allFilters.area.max ? (
+          <SingleFilterWrapper>
+            <SingleFilterText>
+              {allFilters.area.min}მ<sup>2</sup> - {allFilters.area.max}მ
+              <sup>2</sup>{" "}
+            </SingleFilterText>
+            <CloseIcon
+              src="/images/close.png"
+              onClick={() => {
+                setAllFilters((prev) => ({
+                  ...prev,
+                  area: { min: "", max: "" },
+                }));
+              }}
+            />
+          </SingleFilterWrapper>
+        ) : null}
+
+        {allFilters.price.min || allFilters.price.max ? (
+          <SingleFilterWrapper>
+            <SingleFilterText>
+              {allFilters.price.min}₾ - {allFilters.price.max}₾{" "}
+            </SingleFilterText>
+            <CloseIcon
+              src="/images/close.png"
+              onClick={() => {
+                setAllFilters((prev) => ({
+                  ...prev,
+                  price: { min: "", max: "" },
+                }));
+              }}
+            />
+          </SingleFilterWrapper>
+        ) : null}
+
+        {allFilters.bedrooms ? (
+          <SingleFilterWrapper>
+            <SingleFilterText>{allFilters.bedrooms}</SingleFilterText>
+            <CloseIcon
+              src="/images/close.png"
+              onClick={() => {
+                setAllFilters((prev) => ({ ...prev, bedrooms: "" }));
+              }}
+            />
+          </SingleFilterWrapper>
+        ) : null}
+
+        {allFilters.region.length > 0 ||
+        allFilters.area.min ||
+        allFilters.area.max ||
+        allFilters.price.min ||
+        allFilters.price.max ||
+        allFilters.bedrooms ? (
+          <Clear
+            onClick={() => {
+              setAllFilters({
+                region: [],
+                area: { min: "", max: "" },
+                price: { min: "", max: "" },
+                bedrooms: "",
+              });
+            }}
+          >
+            გასუფთავება
+          </Clear>
+        ) : null}
+      </FiltersContainer>
+
+      <ListingsContainer>
+        {listings
+          .filter((item) => {
+            let filtered = true;
+            if (allFilters.region.length > 0) {
+              if (!regionIds.includes(item.city.region_id)) filtered = false;
+            }
+            if (allFilters.area.min && allFilters.area.max) {
+              if (
+                !(
+                  item.area >= parseInt(allFilters.area.min) &&
+                  item.area <= parseInt(allFilters.area.max)
+                )
+              ) {
+                filtered = false;
+              }
+            }
+
+            if (allFilters.price.min && allFilters.price.max) {
+              if (
+                !(
+                  item.price >= parseInt(allFilters.price.min) &&
+                  item.price <= parseInt(allFilters.price.max)
+                )
+              ) {
+                filtered = false;
+              }
+            }
+
+            if (allFilters.bedrooms) {
+              if (!(item.bedrooms === parseInt(allFilters.bedrooms))) {
+                filtered = false;
+              }
+            }
+
+            return filtered;
+          })
+          .map((item) => {
+            return (
+              <Card key={item.id}>
+                <DealType>
+                  {item.is_rental === 0 ? "ქირავდება" : "იყიდება"}s
+                </DealType>
+                <CardImg src={item.image} />
+                <CardBody>
+                  <Price>{item.price} ₾</Price>
+                  <Address>
+                    <img src="/images/location.png" />
+                    {item.address}
+                  </Address>
+                  <IconsContainer>
+                    <SingleIconContainer>
+                      <img src="/images/bed.png" alt="" />
+                      <IconText>{item.bedrooms}</IconText>
+                    </SingleIconContainer>
+                    <SingleIconContainer>
+                      <img src="/images/area.png" alt="" />
+                      <IconText>
+                        {item.area} მ<sup>2</sup>
+                      </IconText>
+                    </SingleIconContainer>
+                    <SingleIconContainer>
+                      <img src="/images/stake.png" alt="" />
+                      <IconText>{item.zip_code}</IconText>
+                    </SingleIconContainer>
+                  </IconsContainer>
+                </CardBody>
+              </Card>
+            );
+          })}
       </ListingsContainer>
     </StyledSection>
   );
@@ -232,29 +322,6 @@ const StyledContainer = styled.div`
   align-items: center;
   justify-content: space-between;
 `;
-
-const StyledFiltersWrapper = styled.div`
-  border: solid 1px #dbdbdb;
-  border-radius: 10px;
-  padding: 1.4rem 2rem;
-  display: flex;
-  gap: 2.4rem;
-`;
-
-const SingleFilterWrapper = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.4rem;
-  position: relative;
-`;
-
-const FilterText = styled.span`
-  font-size: 1.6rem;
-  font-weight: 500;
-  color: #021526;
-`;
-
-const ArrowIcon = styled.img``;
 
 const ButtonsContainer = styled.div`
   display: flex;
@@ -292,7 +359,6 @@ const ListingsContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 2rem;
-  margin-top: 7.7rem;
 `;
 
 const Card = styled.div`
@@ -360,51 +426,37 @@ const DealType = styled.p`
   left: 2.3rem;
 `;
 
-const FilterTitle = styled.h2`
-  font-size: 1.6rem;
-  font-weight: 500;
-  color: #021526;
+const FiltersContainer = styled.div`
+  display: flex;
+  gap: 0.8rem;
+  align-items: center;
+  justify-content: flex-start;
+  margin: 1.6rem 0 3.2rem;
 `;
 
-const RegionsPopup = styled.div<{ $active: boolean }>`
-  display: ${(props) => (props.$active ? "flex" : "none")};
-
-  position: absolute;
-  top: 4.2rem;
-  left: -2rem;
-  padding: 2.4rem;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 2.4rem;
-  background-color: #fff;
-  z-index: 100;
-  width: 73rem;
-  border-radius: 10px;
-  box-shadow: 5px 5px 12px 0 rgba(2, 21, 38, 0.08);
+const SingleFilterWrapper = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.75rem;
+  padding: 0.6rem 1rem;
+  border-radius: 43px;
   border: solid 1px #dbdbdb;
 `;
 
-const RegionsContainer = styled.div`
-  display: flex;
-  gap: 14rem;
-  justify-content: space-between;
-  row-gap: 1.6rem;
-  flex-wrap: wrap;
-  max-width: 100%;
-  margin-bottom: 0.8rem;
-`;
-
-const SingleRegionContainer = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 0.8rem;
-  min-width: 12rem;
-`;
-
-const ChooseButton = styled(AddListingButton)`
-  padding: 0.8rem 1.4rem;
+const SingleFilterText = styled.span`
   font-size: 1.4rem;
-  align-self: flex-end;
+  text-align: center;
+  color: rgba(2, 21, 38, 0.8);
+`;
+
+const CloseIcon = styled.img``;
+
+const Clear = styled.span`
+  font-size: 1.4rem;
+  font-weight: 500;
+  text-align: center;
+  color: #021526;
 `;
 
 export default AllListing;
