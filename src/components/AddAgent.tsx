@@ -55,6 +55,7 @@ const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
           </SingleInputWrapper>
           <StyledButtonWrapper>
             <CancelButton
+              type="button"
               onClick={() => {
                 setActive(false);
               }}

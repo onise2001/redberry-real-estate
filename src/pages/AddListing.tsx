@@ -1,8 +1,41 @@
-import React, { useState } from "react";
+import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import DragAndDrop from "../components/DragAndDrop";
+import { useNavigate } from "react-router-dom";
+import Select from "react-select";
+import { components, DropdownIndicatorProps } from "react-select";
 
 const AddListing: React.FC = () => {
+  const navigate = useNavigate();
+  const [regions, setRegions] = useState<Region[]>();
+  const [agents, setAgents] = useState<Agent[]>();
+  useEffect(() => {
+    const fetchRegions = async () => {
+      const response = await fetch(
+        "https://api.real-estate-manager.redberryinternship.ge/api/agents",
+        {
+          method: "GET",
+          headers: {
+            Authorization: "Bearer 9cfc8fa2-e80e-42e6-91f0-3eda643de14a",
+          },
+        }
+      );
+      if (response.status === 200) {
+        const data = await response.json();
+        setAgents(data);
+      }
+    };
+    fetchRegions();
+  }, []);
+
+  const CustomArrow = (props: DropdownIndicatorProps) => {
+    return (
+      <components.DropdownIndicator {...props}>
+        <img src="/images/arrow.png" />
+      </components.DropdownIndicator>
+    );
+  };
+
   return (
     <FormContainer>
       <Title>ლისტინგის დამატება</Title>
@@ -17,10 +50,11 @@ const AddListing: React.FC = () => {
                 id="rent"
                 name="deal-type"
                 value="1"
+                defaultChecked
               />
             </SingleInputWrapperForRadion>
             <SingleInputWrapperForRadion>
-              <StyledLabel htmlFor="sell">ქირავდება</StyledLabel>
+              <StyledLabel htmlFor="sell">იყიდება</StyledLabel>
 
               <StyledRadioButton
                 type="radio"
@@ -31,6 +65,7 @@ const AddListing: React.FC = () => {
             </SingleInputWrapperForRadion>
           </RadioButtonContainer>
         </RadionWrapper>
+
         <RowContainer>
           <RowTitle>მდებარეობა</RowTitle>
 
@@ -54,28 +89,161 @@ const AddListing: React.FC = () => {
           </Row>
           <Row>
             <SingleInputWrapper>
-              <StyledLabel htmlFor="firstname">რეგიონი</StyledLabel>
+              <StyledLabel htmlFor="email">რეგიონი</StyledLabel>
               <StyledInput type="text" id="email" />
             </SingleInputWrapper>
             <SingleInputWrapper>
-              <StyledLabel htmlFor="firstname">ქალაქი</StyledLabel>
-              <StyledInput type="text" />
+              <StyledLabel htmlFor="city">ქალაქი</StyledLabel>
+              <StyledInput type="text" id="city" />
             </SingleInputWrapper>
           </Row>
         </RowContainer>
+
+        <RowContainer>
+          <RowTitle>ბინის დეტალები</RowTitle>
+
+          <Row>
+            <SingleInputWrapper>
+              <StyledLabel htmlFor="price">ფასი</StyledLabel>
+              <StyledInput type="text" id="price" />
+              <ValidationMessage>
+                <CheckIcon src="/images/check.png" />
+                მხოლოდ რიცხვები
+              </ValidationMessage>
+            </SingleInputWrapper>
+            <SingleInputWrapper>
+              <StyledLabel htmlFor="area">ფართობი</StyledLabel>
+              <StyledInput type="text" id="area" />
+              <ValidationMessage>
+                <CheckIcon src="/images/check.png" />
+                მხოლოდ რიცხვები
+              </ValidationMessage>
+            </SingleInputWrapper>
+          </Row>
+          <Row>
+            <SingleInputWrapper>
+              <StyledLabel htmlFor="bedrooms">
+                საძინებლების რაოდენობა*
+              </StyledLabel>
+              <StyledInput type="text" id="bedrooms" />
+              <ValidationMessage>
+                <CheckIcon src="/images/check.png" />
+                მხოლოდ რიცხვები
+              </ValidationMessage>
+            </SingleInputWrapper>
+          </Row>
+        </RowContainer>
+
+        <SingleInputWrapper>
+          <StyledLabel>აღწერა*</StyledLabel>
+          <StyledTextArea />
+        </SingleInputWrapper>
+
         <SingleInputWrapper>
           <StyledLabel>ატვირთეთ ფოტო*</StyledLabel>
           <DragAndDrop />
         </SingleInputWrapper>
+
+        <SingleInputWrapper>
+          <StyledLabel>აირჩიე</StyledLabel>
+          {/* <StyledDropDown>
+            {agents?.map((item) => {
+              return (
+                <StyledOption key={item.id}>
+                  {`${item.name} ${item.surname}`}
+                </StyledOption>
+              );
+            })} 
+            
+          </StyledDropDown>*/}
+          <Select
+            placeholder="აირჩიე"
+            options={agents?.map((item) => {
+              return { value: item.id, label: `${item.name} ${item.surname}` };
+            })}
+            components={{ DropdownIndicator: CustomArrow }}
+            styles={{
+              control: (baseStyles, state) => ({
+                ...baseStyles,
+                fontFamily: "FiraGO",
+                cursor: "pointer",
+                width: "38.4rem",
+                border: "solid 1px #808a93",
+                borderRadius: "6px",
+                borderColor: state.selectProps.menuIsOpen
+                  ? "#808a93"
+                  : "#808a93",
+                borderBottom: state.selectProps.menuIsOpen
+                  ? "none"
+                  : baseStyles.border,
+                borderBottomLeftRadius: state.isFocused
+                  ? "0"
+                  : baseStyles.borderRadius,
+                borderBottomRightRadius: state.isFocused
+                  ? "0"
+                  : baseStyles.borderRadius,
+                boxShadow: state.isFocused ? "none" : "none",
+                "&:hover": {
+                  borderColor: "#808a93",
+                },
+                fontSize: "1.4rem",
+                padding: "0.2rem",
+                "& span": {
+                  display: "none",
+                },
+              }),
+              dropdownIndicator: (baseStyles, state) => ({
+                ...baseStyles,
+                cursor: "pointer",
+                transform: state.selectProps.menuIsOpen
+                  ? "rotate(180deg)"
+                  : "rotate(0)",
+              }),
+              menuList: (baseStyles) => ({
+                ...baseStyles,
+                padding: "0",
+              }),
+              menu: (baseStyles, state) => ({
+                ...baseStyles,
+                fontFamily: "inherit",
+
+                border: "solid 1px #808a93",
+                padding: "0",
+                margin: "0",
+                borderRadius: "6px",
+                borderTop: "none",
+                borderTopLeftRadius: state.selectProps.menuIsOpen
+                  ? "0"
+                  : baseStyles.borderRadius,
+                borderTopRightRadius: state.selectProps.menuIsOpen
+                  ? "0"
+                  : baseStyles.borderRadius,
+              }),
+              option: (baseStyles, { isSelected }) => ({
+                ...baseStyles,
+                borderTop: "solid 1px rgb(128, 138, 147) ",
+                fontSize: "1.4rem",
+                color: "#021526",
+                padding: "1rem",
+                cursor: "pointer",
+                backgroundColor: isSelected ? "rgba(128,138,147,0.4)" : "#fff",
+                "&:hover": { backgroundColor: "rgba(128,138,147,0.3)" },
+              }),
+            }}
+            //menuIsOpen={true}
+          />
+        </SingleInputWrapper>
+
         <StyledButtonWrapper>
           <CancelButton
+            type="button"
             onClick={() => {
-              setActive(false);
+              navigate("/");
             }}
           >
             გაუქმება
           </CancelButton>
-          <SubmitButton type="submit">დაამატე აგენტი</SubmitButton>
+          <SubmitButton type="submit">დაამატე ლისტინგი</SubmitButton>
         </StyledButtonWrapper>
       </StyledForm>
     </FormContainer>
@@ -108,6 +276,7 @@ const RowContainer = styled.div`
   display: flex;
   flex-direction: column;
   gap: 2.8rem;
+  margin-top: 5.2rem;
 `;
 
 const Row = styled.div`
@@ -159,9 +328,21 @@ const StyledInput = styled.input`
   width: 38.4rem;
   font-size: 1.4rem;
   color: #021526;
+  padding: 1.15rem;
+  border-radius: 6px;
+  border: solid 1px #808a93;
+`;
+
+const StyledTextArea = styled.textarea`
+  width: 100%;
+  height: 13.5rem;
+  outline: none;
+  font-size: 1.4rem;
+  color: #021526;
   padding: 1.25rem 1rem;
   border-radius: 6px;
   border: solid 1px #808a93;
+  resize: none;
 `;
 
 const StyledRadioButton = styled.input``;
@@ -173,6 +354,26 @@ const ValidationMessage = styled.span`
 
 const CheckIcon = styled.img`
   margin-right: 0.7rem;
+`;
+
+const StyledDropDown = styled.select`
+  outline: none;
+  cursor: pointer;
+  width: 38.4rem;
+  padding: 1rem;
+  border-radius: 6px;
+  border: solid 1px #808a93;
+  font-size: 1.4rem;
+  color: #021526;
+`;
+
+const StyledOption = styled.option`
+  font-size: 1.4rem;
+  color: #021526;
+  display: flex;
+  align-items: center;
+  padding: 1rem;
+  border-bottom: solid 1px #808a93;
 `;
 
 const StyledButtonWrapper = styled.div`

@@ -1,11 +1,14 @@
 import React from "react";
+import { Link } from "react-router-dom";
 import { styled } from "styled-components";
 
 const Header: React.FC = () => {
   return (
     <StyledHeader>
       <HeaderContainer>
-        <StyledImage src="/images/LOGO-02 3.png" />
+        <Link to="/">
+          <StyledImage src="/images/LOGO-02 3.png" />
+        </Link>
       </HeaderContainer>
     </StyledHeader>
   );

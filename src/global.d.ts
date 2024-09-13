@@ -15,3 +15,10 @@ interface AllFilters {
   price: { min: string; max: string };
   bedrooms: string;
 }
+
+interface Agent {
+  id: number;
+  name: string;
+  surname: string;
+  avatar: string;
+}
