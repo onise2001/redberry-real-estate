@@ -9,17 +9,15 @@ interface DragAndDropProps {
 const DragAndDrop: React.FC<DragAndDropProps> = ({ onDrop }) => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
-  const handleDrop = (acceptedFiles: File[]) => {
-    const file = acceptedFiles[0]; // Only accept a single file
-    if (file) {
-      setUploadedFile(file);
-      onDrop(file); // Pass the single file to the parent via onDrop
-    }
-  };
-
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop: handleDrop, // Call handleDrop when files are dropped
-    accept: "image/*",
+    onDrop: (acceptedFiles) => {
+      const file = acceptedFiles[0]; // Only accept a single file
+      if (file) {
+        setUploadedFile(file);
+        onDrop(file); // Pass the single file to the parent via onDrop
+      }
+    }, // Call handleDrop when files are dropped
+    accept: { "image/*": [] },
     multiple: false,
   });
 

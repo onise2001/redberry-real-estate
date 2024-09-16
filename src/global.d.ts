@@ -28,3 +28,8 @@ interface City {
   name: string;
   region_id: number;
 }
+
+type SelectOption = {
+  value: number;
+  label: string;
+};

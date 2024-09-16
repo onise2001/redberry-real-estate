@@ -3,13 +3,28 @@ import styled from "styled-components";
 import DragAndDrop from "../components/DragAndDrop";
 import { useNavigate } from "react-router-dom";
 import Select from "react-select";
-import { components, DropdownIndicatorProps, props } from "react-select";
+import { components, DropdownIndicatorProps } from "react-select";
+import { useForm, SubmitHandler, Controller } from "react-hook-form";
+
+type ListingInputs = {
+  address: string;
+  description: string;
+  zip_code: string;
+  price: number;
+  area: number;
+  bedrooms: number;
+  is_rental: number;
+  image: File;
+  city_id: number;
+  region_id: number;
+  agent_id: number;
+};
 
 const AddListing: React.FC = () => {
   const navigate = useNavigate();
-  const [regions, setRegions] = useState<Region[]>();
-  const [agents, setAgents] = useState<Agent[]>();
-  const [cities, setCitites] = useState<City[]>();
+  const [regions, setRegions] = useState<SelectOption[]>([]);
+  const [agents, setAgents] = useState<SelectOption[]>([]);
+  const [cities, setCitites] = useState<SelectOption[]>([]);
 
   const CustomArrow = (props: DropdownIndicatorProps) => {
     return (
@@ -78,6 +93,41 @@ const AddListing: React.FC = () => {
     }),
   };
 
+  const {
+    register,
+    watch,
+    control,
+    handleSubmit,
+    formState: { errors },
+  } = useForm<ListingInputs>();
+
+  const addListing = async (formData) => {
+    const response = await fetch(
+      "https://api.real-estate-manager.redberryinternship.ge/api/real-estates",
+      {
+        method: "POST",
+        headers: {
+          Authorization: "Bearer 9cfc8fa2-e80e-42e6-91f0-3eda643de14a",
+        },
+
+        body: formData,
+      }
+    );
+    console.log(response);
+  };
+  const city = watch("region_id");
+  console.log(city);
+
+  const submit: SubmitHandler<ListingInputs> = (data) => {
+    console.log(data);
+    const formData = new FormData();
+    Object.entries(data).forEach(([key, value]) => {
+      formData.append(key, value);
+    });
+
+    addListing(formData);
+  };
+
   useEffect(() => {
     const fetchAgents = async () => {
       const response = await fetch(
@@ -91,7 +141,11 @@ const AddListing: React.FC = () => {
       );
       if (response.status === 200) {
         const data = await response.json();
-        setAgents(data);
+        setAgents(
+          data.map((item) => {
+            return { label: `${item.name} ${item.surname}`, value: item.id };
+          })
+        );
       }
     };
     fetchAgents();
@@ -102,7 +156,11 @@ const AddListing: React.FC = () => {
       );
       if (response.status === 200) {
         const data = await response.json();
-        setRegions(data);
+        setRegions(
+          data.map((item) => {
+            return { label: item.name, value: item.id };
+          })
+        );
       }
     };
     fetchRegions();
@@ -113,7 +171,11 @@ const AddListing: React.FC = () => {
       );
       if (response.status === 200) {
         const data = await response.json();
-        setCitites(data);
+        setCitites(
+          data.map((item) => {
+            return { label: item.name, value: item.id };
+          })
+        );
       }
     };
     fetchCities();
@@ -122,48 +184,63 @@ const AddListing: React.FC = () => {
   return (
     <FormContainer>
       <Title>ლისტინგის დამატება</Title>
-      <StyledForm>
-        <RadionWrapper>
-          <StyledLabel htmlFor="deal-type">გარიგების ტიპი*</StyledLabel>
-          <RadioButtonContainer>
-            <SingleInputWrapperForRadion>
-              <StyledLabel htmlFor="rent">ქირავდება</StyledLabel>
-              <StyledRadioButton
-                type="radio"
-                id="rent"
-                name="deal-type"
-                value="1"
-                defaultChecked
-              />
-            </SingleInputWrapperForRadion>
-            <SingleInputWrapperForRadion>
-              <StyledLabel htmlFor="sell">იყიდება</StyledLabel>
-
-              <StyledRadioButton
-                type="radio"
-                id="sell"
-                name="deal-type"
-                value="0"
-              />
-            </SingleInputWrapperForRadion>
-          </RadioButtonContainer>
-        </RadionWrapper>
+      <StyledForm onSubmit={handleSubmit(submit)}>
+        <Controller
+          name="is_rental"
+          control={control}
+          defaultValue={0}
+          render={({ field }) => (
+            <RadionWrapper>
+              <StyledLabel htmlFor="deal-type">გარიგების ტიპი*</StyledLabel>
+              <RadioButtonContainer>
+                <SingleInputWrapperForRadion>
+                  <StyledLabel htmlFor="sell">იყიდება</StyledLabel>
+                  <StyledRadioButton
+                    {...field}
+                    type="radio"
+                    id="sell"
+                    name="deal-type"
+                    value={0}
+                    checked={field.value === 0}
+                    onChange={() => field.onChange(0)}
+                  />
+                </SingleInputWrapperForRadion>
+                <SingleInputWrapperForRadion>
+                  <StyledLabel htmlFor="rent">ქირავდება</StyledLabel>
+                  <StyledRadioButton
+                    {...field}
+                    type="radio"
+                    id="rent"
+                    name="deal-type"
+                    value={1}
+                    checked={field.value === 1}
+                    onChange={() => field.onChange(1)}
+                  />
+                </SingleInputWrapperForRadion>
+              </RadioButtonContainer>
+            </RadionWrapper>
+          )}
+        />
 
         <RowContainer>
           <RowTitle>მდებარეობა</RowTitle>
 
           <Row>
             <SingleInputWrapper>
-              <StyledLabel htmlFor="firstname">მისამართი*</StyledLabel>
-              <StyledInput type="text" id="firstname" />
+              <StyledLabel htmlFor="address">მისამართი*</StyledLabel>
+              <StyledInput type="text" id="address" {...register("address")} />
               <ValidationMessage>
                 <CheckIcon src="/images/check.png" />
                 მინიმუმ ორი სიმბოლო
               </ValidationMessage>
             </SingleInputWrapper>
             <SingleInputWrapper>
-              <StyledLabel htmlFor="lastname">საფოსტო ინდექსი*</StyledLabel>
-              <StyledInput type="text" id="lastname" />
+              <StyledLabel htmlFor="zip_code">საფოსტო ინდექსი*</StyledLabel>
+              <StyledInput
+                type="text"
+                id="zip_code"
+                {...register("zip_code")}
+              />
               <ValidationMessage>
                 <CheckIcon src="/images/check.png" />
                 მხოლოდ რიცხვები
@@ -173,32 +250,53 @@ const AddListing: React.FC = () => {
           <Row>
             <SingleInputWrapper>
               <StyledLabel>რეგიონი</StyledLabel>
-              <Select
-                placeholder="რეგიონი"
-                options={regions?.map((item) => {
-                  return {
-                    value: item.id,
-                    label: item.name,
-                  };
-                })}
-                components={{ DropdownIndicator: CustomArrow }}
-                styles={dropDownStyles}
-                //menuIsOpen={true}
+              <Controller
+                name="region_id"
+                control={control}
+                defaultValue={0}
+                render={({ field }) => (
+                  <Select<SelectOption>
+                    {...field}
+                    placeholder="რეგიონი"
+                    options={regions?.map((item) => ({
+                      value: item.value,
+                      label: item.label,
+                    }))}
+                    value={regions.find(
+                      (region) => region.value === field.value
+                    )}
+                    components={{ DropdownIndicator: CustomArrow }}
+                    styles={dropDownStyles}
+                    onChange={(option) =>
+                      field.onChange(option ? option.value : null)
+                    }
+                    //menuIsOpen={true}
+                  />
+                )}
               />
             </SingleInputWrapper>
             <SingleInputWrapper>
               <StyledLabel>ქალაქი</StyledLabel>
-              <Select
-                placeholder="ქალაქი"
-                options={cities?.map((item) => {
-                  return {
-                    value: item.id,
-                    label: item.name,
-                  };
-                })}
-                components={{ DropdownIndicator: CustomArrow }}
-                styles={dropDownStyles}
-                //menuIsOpen={true}
+              <Controller
+                name="city_id"
+                control={control}
+                render={({ field }) => (
+                  <Select<SelectOption>
+                    {...field}
+                    placeholder="ქალაქი"
+                    options={cities?.map((item) => ({
+                      value: item.value,
+                      label: item.label,
+                    }))}
+                    value={cities.find((item) => item.id === field.value)}
+                    components={{ DropdownIndicator: CustomArrow }}
+                    styles={dropDownStyles}
+                    onChange={(option) =>
+                      field.onChange(option ? option?.value : null)
+                    }
+                    //menuIsOpen={true}
+                  />
+                )}
               />
             </SingleInputWrapper>
           </Row>
@@ -210,7 +308,7 @@ const AddListing: React.FC = () => {
           <Row>
             <SingleInputWrapper>
               <StyledLabel htmlFor="price">ფასი</StyledLabel>
-              <StyledInput type="text" id="price" />
+              <StyledInput type="text" id="price" {...register("price")} />
               <ValidationMessage>
                 <CheckIcon src="/images/check.png" />
                 მხოლოდ რიცხვები
@@ -218,7 +316,7 @@ const AddListing: React.FC = () => {
             </SingleInputWrapper>
             <SingleInputWrapper>
               <StyledLabel htmlFor="area">ფართობი</StyledLabel>
-              <StyledInput type="text" id="area" />
+              <StyledInput type="text" id="area" {...register("area")} />
               <ValidationMessage>
                 <CheckIcon src="/images/check.png" />
                 მხოლოდ რიცხვები
@@ -230,7 +328,11 @@ const AddListing: React.FC = () => {
               <StyledLabel htmlFor="bedrooms">
                 საძინებლების რაოდენობა*
               </StyledLabel>
-              <StyledInput type="text" id="bedrooms" />
+              <StyledInput
+                type="text"
+                id="bedrooms"
+                {...register("bedrooms")}
+              />
               <ValidationMessage>
                 <CheckIcon src="/images/check.png" />
                 მხოლოდ რიცხვები
@@ -241,25 +343,48 @@ const AddListing: React.FC = () => {
 
         <SingleInputWrapper>
           <StyledLabel>აღწერა*</StyledLabel>
-          <StyledTextArea />
+          <StyledTextArea {...register("description")} />
         </SingleInputWrapper>
 
         <SingleInputWrapper>
           <StyledLabel>ატვირთეთ ფოტო*</StyledLabel>
-          <DragAndDrop />
+          <Controller
+            name="image"
+            control={control}
+            render={({ field }) => (
+              <DragAndDrop
+                onDrop={(acceptedFile) => {
+                  field.onChange(acceptedFile);
+                }}
+              />
+            )}
+          />
         </SingleInputWrapper>
 
         <RowTitle>აგენტი</RowTitle>
         <SingleInputWrapper>
           <StyledLabel>აირჩიე</StyledLabel>
-          <Select
-            placeholder="აირჩიე"
-            options={agents?.map((item) => {
-              return { value: item.id, label: `${item.name} ${item.surname}` };
-            })}
-            components={{ DropdownIndicator: CustomArrow }}
-            styles={dropDownStyles}
-            //menuIsOpen={true}
+          <Controller
+            name="agent_id"
+            control={control}
+            render={({ field }) => (
+              <Select<SelectOption>
+                {...field}
+                placeholder="აირჩიე"
+                defaultValue={0}
+                options={agents?.map((item) => {
+                  return {
+                    value: item.value,
+                    label: item.label,
+                  };
+                })}
+                value={agents.find((item) => item.id === field.value)}
+                components={{ DropdownIndicator: CustomArrow }}
+                styles={dropDownStyles}
+                onChange={(option) => field.onChange(option?.value)}
+                //menuIsOpen={true}
+              />
+            )}
           />
         </SingleInputWrapper>
 
