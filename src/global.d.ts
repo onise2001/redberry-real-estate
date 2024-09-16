@@ -22,3 +22,9 @@ interface Agent {
   surname: string;
   avatar: string;
 }
+
+interface City {
+  id: number;
+  name: string;
+  region_id: number;
+}

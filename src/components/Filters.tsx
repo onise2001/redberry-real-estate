@@ -60,7 +60,7 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
     }
   };
 
-  console.log(allFilters);
+  //console.log(allFilters);
 
   return (
     <StyledFiltersWrapper>
@@ -220,7 +220,7 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
               </PriceTitle>
               {areas.map((item) => {
                 return (
-                  <StyledLi>
+                  <StyledLi key={Math.random()}>
                     {`${item} `}მ<sup>2</sup>
                   </StyledLi>
                 );

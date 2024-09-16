@@ -2,17 +2,25 @@ import React, { useState } from "react";
 import { useDropzone } from "react-dropzone";
 import styled from "styled-components";
 
-const DragAndDrop = () => {
-  const [uploadedFiles, setUploadedFiles] = useState<File[]>([]);
+interface DragAndDropProps {
+  onDrop: (acceptedFiles: File) => void;
+}
 
-  const onDrop = (acceptedFiles: File[]) => {
-    setUploadedFiles([...uploadedFiles, ...acceptedFiles]);
+const DragAndDrop: React.FC<DragAndDropProps> = ({ onDrop }) => {
+  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+
+  const handleDrop = (acceptedFiles: File[]) => {
+    const file = acceptedFiles[0]; // Only accept a single file
+    if (file) {
+      setUploadedFile(file);
+      onDrop(file); // Pass the single file to the parent via onDrop
+    }
   };
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop,
+    onDrop: handleDrop, // Call handleDrop when files are dropped
     accept: "image/*",
-    multiple: true,
+    multiple: false,
   });
 
   return (
@@ -20,26 +28,20 @@ const DragAndDrop = () => {
       <DropArea {...getRootProps()}>
         <input {...getInputProps()} />
         {isDragActive ? (
-          <Text>Drop the files here ...</Text>
+          <Text>Drop the file here ...</Text>
+        ) : uploadedFile ? (
+          <ImagePreview>
+            <img
+              src={URL.createObjectURL(uploadedFile)}
+              alt="Preview"
+              width="100%"
+            />
+            <p>{uploadedFile.name}</p>
+          </ImagePreview>
         ) : (
           <PlusIcon src="/images/upload.png" />
         )}
       </DropArea>
-
-      {uploadedFiles.length > 0 && (
-        <UploadedImages>
-          {uploadedFiles.map((file, index) => (
-            <ImagePreview key={index}>
-              <img
-                src={URL.createObjectURL(file)}
-                alt={`Preview ${index}`}
-                width="100%"
-              />
-              <p>{file.name}</p>
-            </ImagePreview>
-          ))}
-        </UploadedImages>
-      )}
     </Container>
   );
 };
@@ -66,12 +68,6 @@ const DropArea = styled.div`
 const Text = styled.p`
   font-size: 1.2rem;
   color: #666666;
-`;
-
-const UploadedImages = styled.div`
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
 `;
 
 const ImagePreview = styled.div`

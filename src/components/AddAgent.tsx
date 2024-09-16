@@ -1,22 +1,70 @@
 import React, { useState } from "react";
 import styled from "styled-components";
 import DragAndDrop from "./DragAndDrop";
+import { useNavigate } from "react-router-dom";
+import { useForm, SubmitHandler, Controller } from "react-hook-form";
 
 interface IAddAgentProps {
   active: boolean;
   setActive: React.Dispatch<React.SetStateAction<boolean>>;
 }
 
+type AgentInputs = {
+  name: string;
+  surname: string;
+  email: string;
+  phone: string;
+  avatar: File;
+};
+
 const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
+  const addAgent = async (formData) => {
+    const key = "9cfc8fa2-e80e-42e6-91f0-3eda643de14a";
+    const response = await fetch(
+      "https://api.real-estate-manager.redberryinternship.ge/api/agents",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${key}`,
+        },
+        body: formData,
+      }
+    );
+    console.log(response);
+    if (response.status === 200) {
+      console.log("added");
+    } else {
+      throw alert("Something Went wrong");
+    }
+  };
+
+  const {
+    register,
+    handleSubmit,
+    control,
+    watch,
+    formState: { errors },
+  } = useForm<AgentInputs>();
+
+  const submit: SubmitHandler<AgentInputs> = (data) => {
+    const formData = new FormData();
+
+    Object.entries(data).forEach(([key, value]) => {
+      formData.append(key, value);
+    });
+
+    addAgent(formData);
+  };
+
   return (
     <StyledSection $active={active}>
       <FormContainer>
         <Title>აგენტის დამატება</Title>
-        <StyledForm>
+        <StyledForm onSubmit={handleSubmit(submit)}>
           <Row>
             <SingleInputWrapper>
               <StyledLabel htmlFor="firstname">სახელი*</StyledLabel>
-              <StyledInput type="text" id="firstname" />
+              <StyledInput type="text" id="firstname" {...register("name")} />
               <ValidationMessage>
                 <CheckIcon src="/images/check.png" />
                 მინიმუმ ორი სიმბოლო
@@ -24,7 +72,7 @@ const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
             </SingleInputWrapper>
             <SingleInputWrapper>
               <StyledLabel htmlFor="lastname">გვარი</StyledLabel>
-              <StyledInput type="text" id="lastname" />
+              <StyledInput type="text" id="lastname" {...register("surname")} />
               <ValidationMessage>
                 <CheckIcon src="/images/check.png" />
                 მინიმუმ ორი სიმბოლო
@@ -34,7 +82,7 @@ const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
           <Row>
             <SingleInputWrapper>
               <StyledLabel htmlFor="email">ელ-ფოსტა*</StyledLabel>
-              <StyledInput type="text" id="email" />
+              <StyledInput type="text" id="email" {...register("email")} />
               <ValidationMessage>
                 <CheckIcon src="/images/check.png" />
                 გამოიყენეთ @redberry.ge ფოსტა
@@ -42,7 +90,11 @@ const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
             </SingleInputWrapper>
             <SingleInputWrapper>
               <StyledLabel htmlFor="phone-number">ტელეფონის ნომერი</StyledLabel>
-              <StyledInput type="text" id="phone-number" />
+              <StyledInput
+                type="text"
+                id="phone-number"
+                {...register("phone")}
+              />
               <ValidationMessage>
                 <CheckIcon src="/images/check.png" />
                 მხოლოდ რიცხვები
@@ -51,7 +103,17 @@ const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
           </Row>
           <SingleInputWrapper>
             <StyledLabel>ატვირთეთ ფოტო*</StyledLabel>
-            <DragAndDrop />
+            <Controller
+              name="avatar"
+              control={control}
+              render={({ field }) => (
+                <DragAndDrop
+                  onDrop={(acceptedFiles) => {
+                    field.onChange(acceptedFiles);
+                  }}
+                />
+              )}
+            />
           </SingleInputWrapper>
           <StyledButtonWrapper>
             <CancelButton

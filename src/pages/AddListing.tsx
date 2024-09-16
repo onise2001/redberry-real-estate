@@ -3,14 +3,83 @@ import styled from "styled-components";
 import DragAndDrop from "../components/DragAndDrop";
 import { useNavigate } from "react-router-dom";
 import Select from "react-select";
-import { components, DropdownIndicatorProps } from "react-select";
+import { components, DropdownIndicatorProps, props } from "react-select";
 
 const AddListing: React.FC = () => {
   const navigate = useNavigate();
   const [regions, setRegions] = useState<Region[]>();
   const [agents, setAgents] = useState<Agent[]>();
+  const [cities, setCitites] = useState<City[]>();
+
+  const CustomArrow = (props: DropdownIndicatorProps) => {
+    return (
+      <components.DropdownIndicator {...props}>
+        <img src="/images/arrow.png" />
+      </components.DropdownIndicator>
+    );
+  };
+
+  const dropDownStyles = {
+    control: (baseStyles, state) => ({
+      ...baseStyles,
+      fontFamily: "FiraGO",
+      cursor: "pointer",
+      width: "38.4rem",
+      border: "solid 1px #808a93",
+      borderRadius: "6px",
+      borderColor: state.selectProps.menuIsOpen ? "#808a93" : "#808a93",
+      borderBottom: state.selectProps.menuIsOpen ? "none" : baseStyles.border,
+      borderBottomLeftRadius: state.isFocused ? "0" : "6px",
+      borderBottomRightRadius: state.isFocused ? "0" : "6px",
+      boxShadow: state.isFocused ? "none" : "none",
+      "&:hover": {
+        borderColor: "#808a93",
+      },
+      fontSize: "1.4rem",
+      padding: "0.55rem",
+      "& span": {
+        display: "none",
+      },
+    }),
+    dropdownIndicator: (baseStyles, state) => ({
+      ...baseStyles,
+      cursor: "pointer",
+      transform: state.selectProps.menuIsOpen ? "rotate(180deg)" : "rotate(0)",
+    }),
+    menuList: (baseStyles) => ({
+      ...baseStyles,
+      padding: "0",
+    }),
+    menu: (baseStyles, state) => ({
+      ...baseStyles,
+      fontFamily: "inherit",
+
+      border: "solid 1px #808a93",
+      padding: "0",
+      margin: "0",
+      borderRadius: "6px",
+      borderTop: "none",
+      borderTopLeftRadius: state.selectProps.menuIsOpen
+        ? "0"
+        : baseStyles.borderRadius,
+      borderTopRightRadius: state.selectProps.menuIsOpen
+        ? "0"
+        : baseStyles.borderRadius,
+    }),
+    option: (baseStyles, { isSelected }) => ({
+      ...baseStyles,
+      borderTop: "solid 1px rgb(128, 138, 147) ",
+      fontSize: "1.4rem",
+      color: "#021526",
+      padding: "1rem",
+      cursor: "pointer",
+      backgroundColor: isSelected ? "rgba(128,138,147,0.4)" : "#fff",
+      "&:hover": { backgroundColor: "rgba(128,138,147,0.3)" },
+    }),
+  };
+
   useEffect(() => {
-    const fetchRegions = async () => {
+    const fetchAgents = async () => {
       const response = await fetch(
         "https://api.real-estate-manager.redberryinternship.ge/api/agents",
         {
@@ -25,16 +94,30 @@ const AddListing: React.FC = () => {
         setAgents(data);
       }
     };
-    fetchRegions();
-  }, []);
+    fetchAgents();
 
-  const CustomArrow = (props: DropdownIndicatorProps) => {
-    return (
-      <components.DropdownIndicator {...props}>
-        <img src="/images/arrow.png" />
-      </components.DropdownIndicator>
-    );
-  };
+    const fetchRegions = async () => {
+      const response = await fetch(
+        "https://api.real-estate-manager.redberryinternship.ge/api/regions"
+      );
+      if (response.status === 200) {
+        const data = await response.json();
+        setRegions(data);
+      }
+    };
+    fetchRegions();
+
+    const fetchCities = async () => {
+      const response = await fetch(
+        "https://api.real-estate-manager.redberryinternship.ge/api/cities"
+      );
+      if (response.status === 200) {
+        const data = await response.json();
+        setCitites(data);
+      }
+    };
+    fetchCities();
+  }, []);
 
   return (
     <FormContainer>
@@ -89,12 +172,34 @@ const AddListing: React.FC = () => {
           </Row>
           <Row>
             <SingleInputWrapper>
-              <StyledLabel htmlFor="email">რეგიონი</StyledLabel>
-              <StyledInput type="text" id="email" />
+              <StyledLabel>რეგიონი</StyledLabel>
+              <Select
+                placeholder="რეგიონი"
+                options={regions?.map((item) => {
+                  return {
+                    value: item.id,
+                    label: item.name,
+                  };
+                })}
+                components={{ DropdownIndicator: CustomArrow }}
+                styles={dropDownStyles}
+                //menuIsOpen={true}
+              />
             </SingleInputWrapper>
             <SingleInputWrapper>
-              <StyledLabel htmlFor="city">ქალაქი</StyledLabel>
-              <StyledInput type="text" id="city" />
+              <StyledLabel>ქალაქი</StyledLabel>
+              <Select
+                placeholder="ქალაქი"
+                options={cities?.map((item) => {
+                  return {
+                    value: item.id,
+                    label: item.name,
+                  };
+                })}
+                components={{ DropdownIndicator: CustomArrow }}
+                styles={dropDownStyles}
+                //menuIsOpen={true}
+              />
             </SingleInputWrapper>
           </Row>
         </RowContainer>
@@ -144,92 +249,16 @@ const AddListing: React.FC = () => {
           <DragAndDrop />
         </SingleInputWrapper>
 
+        <RowTitle>აგენტი</RowTitle>
         <SingleInputWrapper>
           <StyledLabel>აირჩიე</StyledLabel>
-          {/* <StyledDropDown>
-            {agents?.map((item) => {
-              return (
-                <StyledOption key={item.id}>
-                  {`${item.name} ${item.surname}`}
-                </StyledOption>
-              );
-            })} 
-            
-          </StyledDropDown>*/}
           <Select
             placeholder="აირჩიე"
             options={agents?.map((item) => {
               return { value: item.id, label: `${item.name} ${item.surname}` };
             })}
             components={{ DropdownIndicator: CustomArrow }}
-            styles={{
-              control: (baseStyles, state) => ({
-                ...baseStyles,
-                fontFamily: "FiraGO",
-                cursor: "pointer",
-                width: "38.4rem",
-                border: "solid 1px #808a93",
-                borderRadius: "6px",
-                borderColor: state.selectProps.menuIsOpen
-                  ? "#808a93"
-                  : "#808a93",
-                borderBottom: state.selectProps.menuIsOpen
-                  ? "none"
-                  : baseStyles.border,
-                borderBottomLeftRadius: state.isFocused
-                  ? "0"
-                  : baseStyles.borderRadius,
-                borderBottomRightRadius: state.isFocused
-                  ? "0"
-                  : baseStyles.borderRadius,
-                boxShadow: state.isFocused ? "none" : "none",
-                "&:hover": {
-                  borderColor: "#808a93",
-                },
-                fontSize: "1.4rem",
-                padding: "0.2rem",
-                "& span": {
-                  display: "none",
-                },
-              }),
-              dropdownIndicator: (baseStyles, state) => ({
-                ...baseStyles,
-                cursor: "pointer",
-                transform: state.selectProps.menuIsOpen
-                  ? "rotate(180deg)"
-                  : "rotate(0)",
-              }),
-              menuList: (baseStyles) => ({
-                ...baseStyles,
-                padding: "0",
-              }),
-              menu: (baseStyles, state) => ({
-                ...baseStyles,
-                fontFamily: "inherit",
-
-                border: "solid 1px #808a93",
-                padding: "0",
-                margin: "0",
-                borderRadius: "6px",
-                borderTop: "none",
-                borderTopLeftRadius: state.selectProps.menuIsOpen
-                  ? "0"
-                  : baseStyles.borderRadius,
-                borderTopRightRadius: state.selectProps.menuIsOpen
-                  ? "0"
-                  : baseStyles.borderRadius,
-              }),
-              option: (baseStyles, { isSelected }) => ({
-                ...baseStyles,
-                borderTop: "solid 1px rgb(128, 138, 147) ",
-                fontSize: "1.4rem",
-                color: "#021526",
-                padding: "1rem",
-                cursor: "pointer",
-                backgroundColor: isSelected ? "rgba(128,138,147,0.4)" : "#fff",
-                "&:hover": { backgroundColor: "rgba(128,138,147,0.3)" },
-              }),
-            }}
+            styles={dropDownStyles}
             //menuIsOpen={true}
           />
         </SingleInputWrapper>
