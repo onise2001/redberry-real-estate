@@ -5,6 +5,7 @@ import { createBrowserRouter, RouterProvider } from "react-router-dom";
 import Layout from "./pages/Layout.tsx";
 import AllListing from "./pages/AllListing.tsx";
 import AddListing from "./pages/AddListing.tsx";
+import SingleListing from "./pages/SingleListing.tsx";
 
 const router = createBrowserRouter([
   {
@@ -18,6 +19,10 @@ const router = createBrowserRouter([
       {
         path: "/add-listing",
         element: <AddListing />,
+      },
+      {
+        path: "/listing/:id",
+        element: <SingleListing />,
       },
     ],
   },

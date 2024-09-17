@@ -7,109 +7,7 @@ import { Link } from "react-router-dom";
 const AllListing: React.FC = () => {
   const [active, setActive] = useState<boolean>(false);
 
-  const [listings, setListings] = useState([
-    {
-      id: 1,
-      address: "შარტავას 2ა",
-      zip_code: "0101",
-      price: 100000,
-      area: 100.5,
-      bedrooms: 3,
-      is_rental: 0,
-      image: "/images/test-image.png",
-      city_id: 1,
-      city: {
-        id: 1,
-        name: "სოხუმი",
-        region_id: 1,
-        region: {
-          id: 1,
-          name: "აფხაზეთი",
-        },
-      },
-    },
-    {
-      id: 2,
-      address: "შარტავას 2ა",
-      zip_code: "0101",
-      price: 100000,
-      area: 100.5,
-      bedrooms: 3,
-      is_rental: 0,
-      image: "/images/test-image.png",
-      city_id: 1,
-      city: {
-        id: 1,
-        name: "სოხუმი",
-        region_id: 2,
-        region: {
-          id: 2,
-          name: "აჭარა",
-        },
-      },
-    },
-    {
-      id: 3,
-      address: "შარტავას 2ა",
-      zip_code: "0101",
-      price: 100000,
-      area: 100.5,
-      bedrooms: 3,
-      is_rental: 0,
-      image: "/images/test-image.png",
-      city_id: 1,
-      city: {
-        id: 1,
-        name: "სოხუმი",
-        region_id: 3,
-        region: {
-          id: 3,
-          name: "გურია",
-        },
-      },
-    },
-    {
-      id: 4,
-      address: "შარტავას 2ა",
-      zip_code: "0101",
-      price: 100000,
-      area: 100.5,
-      bedrooms: 3,
-      is_rental: 0,
-      image: "/images/test-image.png",
-      city_id: 1,
-      city: {
-        id: 1,
-        name: "სოხუმი",
-        region_id: 4,
-        region: {
-          id: 4,
-          name: "თბილისი",
-        },
-      },
-    },
-    {
-      id: 5,
-      address: "შარტავას 2ა",
-      zip_code: "0101",
-      price: 100000,
-      area: 100.5,
-      bedrooms: 3,
-      is_rental: 0,
-      image: "/images/test-image.png",
-      city_id: 1,
-      city: {
-        id: 1,
-        name: "სოხუმი",
-        region_id: 5,
-        region: {
-          id: 5,
-          name: "იმერეთი",
-        },
-      },
-    },
-  ]);
-
+  const [listings, setListings] = useState<Listing[]>([]);
   const [allFilters, setAllFilters] = useState<AllFilters>({
     region: [],
     area: { min: "", max: "" },
@@ -119,16 +17,34 @@ const AllListing: React.FC = () => {
 
   const regionIds = allFilters.region.map((item) => item.id);
 
-  // useEffect(() => {
-  //   // const filters = localStorage.getItem("filters");
-  //   // if (filters) {
-  //   //   const savedFilters: AllFilters = JSON.parse(filters);
-  //   //   setAllFilters(...savedFilters);
-  //   // }
-  //   console.log("Remounted");
-  // }, []);
+  useEffect(() => {
+    const fetchListings = async () => {
+      const response = await fetch(
+        "https://api.real-estate-manager.redberryinternship.ge/api/real-estates",
+        {
+          method: "GET",
+          headers: {
+            Authorization: "Bearer 9cfc8fa2-e80e-42e6-91f0-3eda643de14a",
+          },
+        }
+      );
 
-  //console.log(allFilters);
+      if (response.status === 200) {
+        const data = await response.json();
+        setListings(data);
+      }
+    };
+    fetchListings();
+
+    // const filters = localStorage.getItem("filters");
+    // if (filters) {
+    //   const savedFilters: AllFilters = JSON.parse(filters);
+    //   setAllFilters(...savedFilters);
+    // }
+    console.log("Remounted");
+  }, []);
+
+  console.log(allFilters);
 
   return (
     <StyledSection>
@@ -281,33 +197,35 @@ const AllListing: React.FC = () => {
           .map((item) => {
             return (
               <Card key={item.id}>
-                <DealType>
-                  {item.is_rental === 0 ? "ქირავდება" : "იყიდება"}s
-                </DealType>
-                <CardImg src={item.image} />
-                <CardBody>
-                  <Price>{item.price} ₾</Price>
-                  <Address>
-                    <img src="/images/location.png" />
-                    {item.address}
-                  </Address>
-                  <IconsContainer>
-                    <SingleIconContainer>
-                      <img src="/images/bed.png" alt="" />
-                      <IconText>{item.bedrooms}</IconText>
-                    </SingleIconContainer>
-                    <SingleIconContainer>
-                      <img src="/images/area.png" alt="" />
-                      <IconText>
-                        {item.area} მ<sup>2</sup>
-                      </IconText>
-                    </SingleIconContainer>
-                    <SingleIconContainer>
-                      <img src="/images/stake.png" alt="" />
-                      <IconText>{item.zip_code}</IconText>
-                    </SingleIconContainer>
-                  </IconsContainer>
-                </CardBody>
+                <Link to={`/listing/${item.id}`}>
+                  <DealType>
+                    {item.is_rental === 0 ? "იყიდება" : "ქირავდება"}
+                  </DealType>
+                  <CardImg src={item.image} />
+                  <CardBody>
+                    <Price>{item.price} ₾</Price>
+                    <Address>
+                      <img src="/images/location.png" />
+                      {`${item.city.name}, ${item.address}`}
+                    </Address>
+                    <IconsContainer>
+                      <SingleIconContainer>
+                        <img src="/images/bed.png" alt="" />
+                        <IconText>{item.bedrooms}</IconText>
+                      </SingleIconContainer>
+                      <SingleIconContainer>
+                        <img src="/images/area.png" alt="" />
+                        <IconText>
+                          {item.area} მ<sup>2</sup>
+                        </IconText>
+                      </SingleIconContainer>
+                      <SingleIconContainer>
+                        <img src="/images/stake.png" alt="" />
+                        <IconText>{item.zip_code}</IconText>
+                      </SingleIconContainer>
+                    </IconsContainer>
+                  </CardBody>
+                </Link>
               </Card>
             );
           })}

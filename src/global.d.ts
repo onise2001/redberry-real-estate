@@ -33,3 +33,26 @@ type SelectOption = {
   value: number;
   label: string;
 };
+
+interface CityAndRegion {
+  id: number;
+  name: string;
+  region_id: number;
+  region: Region;
+}
+
+interface Listing {
+  id: number;
+  address: string;
+  description: string;
+  zip_code: string;
+  price: number;
+  area: number;
+  bedrooms: number;
+  is_rental: number;
+  image: string;
+  city_id: number;
+  city: CityAndRegion;
+  agent_id: number;
+  agent: Agent;
+}
