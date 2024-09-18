@@ -2,6 +2,7 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import DragAndDrop from "./DragAndDrop";
 import { useNavigate } from "react-router-dom";
+import { StyledPopUpSection } from "../my-styled-components/GlobalStyles";
 import { useForm, SubmitHandler, Controller } from "react-hook-form";
 
 interface IAddAgentProps {
@@ -57,7 +58,7 @@ const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
   };
 
   return (
-    <StyledSection $active={active}>
+    <StyledPopUpSection $active={active}>
       <FormContainer>
         <Title>აგენტის დამატება</Title>
         <StyledForm onSubmit={handleSubmit(submit)}>
@@ -128,27 +129,27 @@ const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
           </StyledButtonWrapper>
         </StyledForm>
       </FormContainer>
-    </StyledSection>
+    </StyledPopUpSection>
   );
 };
 
-const StyledSection = styled.section<{ $active: boolean }>`
-  display: ${({ $active }) => ($active ? "flex" : "none")};
-  position: fixed;
-  top: 0;
-  left: 0;
-  bottom: 0;
-  right: 0;
-  z-index: 200;
-  width: 100vw;
-  min-height: 100vh;
-  -webkit-backdrop-filter: blur(10px);
-  backdrop-filter: blur(10px);
-  background-color: rgba(2, 21, 38, 0.34);
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-`;
+// const StyledPopUpSection = styled.section<{ $active: boolean }>`
+//   display: ${({ $active }) => ($active ? "flex" : "none")};
+//   position: fixed;
+//   top: 0;
+//   left: 0;
+//   bottom: 0;
+//   right: 0;
+//   z-index: 200;
+//   width: 100vw;
+//   min-height: 100vh;
+//   -webkit-backdrop-filter: blur(10px);
+//   backdrop-filter: blur(10px);
+//   background-color: rgba(2, 21, 38, 0.34);
+//   flex-direction: column;
+//   align-items: center;
+//   justify-content: center;
+// `;
 
 const FormContainer = styled.div`
   margin: auto;

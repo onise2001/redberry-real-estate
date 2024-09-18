@@ -1,9 +1,18 @@
 import React, { useEffect, useState } from "react";
-import { useParams } from "react-router-dom";
+import { useParams, useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import {
+  StyledPopUpSection,
+  OrangeButton,
+  WhiteButton,
+} from "../my-styled-components/GlobalStyles";
+import Slider from "../components/Slider";
+import { format } from "date-fns";
 
 export default function SingleListing() {
   const { id } = useParams();
+  const navigate = useNavigate();
+  const [showDelete, setShowDelete] = useState<boolean>(false);
 
   const [listing, setListing] = useState<Listing>();
 
@@ -21,6 +30,8 @@ export default function SingleListing() {
 
       if (response.status === 200) {
         const data = await response.json();
+        const formattedDate = format(new Date(data.created_at), "dd/MM/yyyy");
+        data.created_at = formattedDate;
         setListing(data);
       }
     };
@@ -28,12 +39,28 @@ export default function SingleListing() {
     fetchListing(id);
   }, []);
 
+  const deleteListing = async (id: number) => {
+    const response = await fetch(
+      `https://api.real-estate-manager.redberryinternship.ge/api/real-estates/${id}`,
+      {
+        method: "DELETE",
+        headers: {
+          Authorization: "Bearer 9cfc8fa2-e80e-42e6-91f0-3eda643de14a",
+        },
+      }
+    );
+
+    if (response.status === 200) {
+      navigate("/");
+    }
+  };
+
   return (
     <StyledSection>
       <ListingWrapper>
         <ListingImage src={listing?.image} />
         <ListingInfoWrapper>
-          <ListingPrice>{listing?.price}</ListingPrice>
+          <ListingPrice>{`${listing?.price} ₾`}</ListingPrice>
           <StyledUl>
             <StyledLi>
               <img src="/images/location.png" />
@@ -62,15 +89,61 @@ export default function SingleListing() {
               </AgentNameWrapper>
             </AvatarWrapper>
             <AgentContanctInfo>
-              <img src="/images/mail.png" alt="" /> {listing?.agent.email}
+              <img
+                src="/images/mail.png"
+                style={{ width: "1.6rem", height: "1.3rem" }}
+                alt=""
+              />{" "}
+              {listing?.agent.email}
             </AgentContanctInfo>
             <AgentContanctInfo>
-              <img src="/images/phone.png" alt="" /> {listing?.agent.phone}
+              <img
+                src="/images/phone.png"
+                style={{ width: "1.45rem", height: "1.7rem" }}
+                alt=""
+              />{" "}
+              {listing?.agent.phone}
             </AgentContanctInfo>
           </AgentInfoContainer>
-          <DeleteListing>ლისტინგის წაშლა</DeleteListing>
+          <DeleteListing
+            onClick={() => {
+              setShowDelete(true);
+            }}
+          >
+            ლისტინგის წაშლა
+          </DeleteListing>
         </ListingInfoWrapper>
       </ListingWrapper>
+      <StyledPopUpSection $active={showDelete}>
+        <DeleteContainer>
+          <CloseIcon
+            src="/images/close.png"
+            onClick={() => {
+              setShowDelete(false);
+            }}
+          />
+          <DeleteTitle>გსურთ წაშალოთ ლისტინგი?</DeleteTitle>
+          <ConfirmContainer>
+            <WhiteButton
+              onClick={() => {
+                setShowDelete(false);
+              }}
+            >
+              გაუქმება
+            </WhiteButton>
+            <OrangeButton
+              onClick={() => {
+                deleteListing(listing?.id);
+              }}
+            >
+              დადასტურება
+            </OrangeButton>
+          </ConfirmContainer>
+        </DeleteContainer>
+      </StyledPopUpSection>
+      <CreatedAt>{`გამოქვეყნების თარიღი ${listing?.created_at}`}</CreatedAt>
+
+      <Slider currentRegionId={listing?.city.region_id} />
     </StyledSection>
   );
 }
@@ -123,7 +196,6 @@ const StyledLi = styled.li`
   gap: 0.4rem;
   font-size: 2.4rem;
   color: #808a93;
-  padding: 0.2rem 0;
 `;
 
 const ListingDescription = styled.p`
@@ -141,6 +213,7 @@ const AgentInfoContainer = styled.div`
   flex-direction: column;
   border-radius: 8px;
   border: solid 1px #dbdbdb;
+  gap: 1.6rem;
 `;
 
 const AvatarWrapper = styled.div`
@@ -172,7 +245,8 @@ const JobSpan = styled.span`
 
 const AgentContanctInfo = styled.span`
   display: flex;
-  gap: 0.5rerm;
+  align-items: center;
+  gap: 0.5rem;
   font-size: 1.4rem;
   color: #808a93;
 `;
@@ -188,4 +262,38 @@ const DeleteListing = styled.button`
   border-radius: 8px;
   border: solid 1px #676e76;
   max-width: 13rem;
+`;
+
+const CreatedAt = styled.span`
+  font-size: 1.6rem;
+  color: #808a93;
+  align-self: center;
+`;
+
+const DeleteContainer = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 2.5rem;
+  padding: 0.6rem 1.3rem 5.8rem;
+  width: 62.3rem;
+  background-color: #fff;
+  border-radius: 20px;
+  box-shadow: 5px 5px 12px 0 rgba(2, 21, 38, 0.08);
+`;
+
+const CloseIcon = styled.img`
+  align-self: flex-end;
+`;
+
+const DeleteTitle = styled.h2`
+  font-size: 2rem;
+  color: #2d3648;
+  margin-bottom: 1rem;
+`;
+
+const ConfirmContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
 `;

@@ -55,4 +55,5 @@ interface Listing {
   city: CityAndRegion;
   agent_id: number;
   agent: Agent;
+  created_at: string;
 }

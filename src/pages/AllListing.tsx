@@ -2,9 +2,14 @@ import React, { useEffect, useState } from "react";
 import { styled } from "styled-components";
 import Filters from "../components/Filters";
 import AddAgent from "../components/AddAgent";
-import { Link } from "react-router-dom";
+import { useNavigate, Link } from "react-router-dom";
+import {
+  OrangeButton,
+  WhiteButton,
+} from "../my-styled-components/GlobalStyles";
 
 const AllListing: React.FC = () => {
+  const navigate = useNavigate();
   const [active, setActive] = useState<boolean>(false);
 
   const [listings, setListings] = useState<Listing[]>([]);
@@ -53,20 +58,20 @@ const AllListing: React.FC = () => {
         <Filters setAllFilters={setAllFilters} allFilters={allFilters} />
         <ButtonsContainer>
           <Link to="/add-listing">
-            <AddListingButton>
+            <OrangeButton>
               <PlusIcon src="/images/white-cross.png" />
               ლისტინგის დამატება
-            </AddListingButton>
+            </OrangeButton>
           </Link>
 
-          <AddAgentButton
+          <WhiteButton
             onClick={() => {
               setActive(true);
             }}
           >
             <PlusIcon src="/images/orange-cross.png" />
             აგენტის დამატება
-          </AddAgentButton>
+          </WhiteButton>
         </ButtonsContainer>
       </StyledContainer>
       <FiltersContainer>
@@ -196,36 +201,39 @@ const AllListing: React.FC = () => {
           })
           .map((item) => {
             return (
-              <Card key={item.id}>
-                <Link to={`/listing/${item.id}`}>
-                  <DealType>
-                    {item.is_rental === 0 ? "იყიდება" : "ქირავდება"}
-                  </DealType>
-                  <CardImg src={item.image} />
-                  <CardBody>
-                    <Price>{item.price} ₾</Price>
-                    <Address>
-                      <img src="/images/location.png" />
-                      {`${item.city.name}, ${item.address}`}
-                    </Address>
-                    <IconsContainer>
-                      <SingleIconContainer>
-                        <img src="/images/bed.png" alt="" />
-                        <IconText>{item.bedrooms}</IconText>
-                      </SingleIconContainer>
-                      <SingleIconContainer>
-                        <img src="/images/area.png" alt="" />
-                        <IconText>
-                          {item.area} მ<sup>2</sup>
-                        </IconText>
-                      </SingleIconContainer>
-                      <SingleIconContainer>
-                        <img src="/images/stake.png" alt="" />
-                        <IconText>{item.zip_code}</IconText>
-                      </SingleIconContainer>
-                    </IconsContainer>
-                  </CardBody>
-                </Link>
+              <Card
+                key={item.id}
+                onClick={() => {
+                  navigate(`/listing/${item.id}`);
+                }}
+              >
+                <DealType>
+                  {item.is_rental === 0 ? "იყიდება" : "ქირავდება"}
+                </DealType>
+                <CardImg src={item.image} />
+                <CardBody>
+                  <Price>{item.price} ₾</Price>
+                  <Address>
+                    <img src="/images/location.png" />
+                    {`${item.city.name}, ${item.address}`}
+                  </Address>
+                  <IconsContainer>
+                    <SingleIconContainer>
+                      <img src="/images/bed.png" alt="" />
+                      <IconText>{item.bedrooms}</IconText>
+                    </SingleIconContainer>
+                    <SingleIconContainer>
+                      <img src="/images/area.png" alt="" />
+                      <IconText>
+                        {item.area} მ<sup>2</sup>
+                      </IconText>
+                    </SingleIconContainer>
+                    <SingleIconContainer>
+                      <img src="/images/stake.png" alt="" />
+                      <IconText>{item.zip_code}</IconText>
+                    </SingleIconContainer>
+                  </IconsContainer>
+                </CardBody>
               </Card>
             );
           })}
@@ -251,28 +259,6 @@ const ButtonsContainer = styled.div`
   gap: 1.6rem;
 `;
 
-const AddListingButton = styled.button`
-  all: unset;
-  font-size: 1.6rem;
-  font-weight: 500;
-  text-align: center;
-  padding: 1.4rem 1.6rem;
-  background-color: #f93b1d;
-  color: #fff;
-  border-radius: 10px;
-`;
-
-const AddAgentButton = styled.button`
-  all: unset;
-  border: solid 1px #f93b1d;
-  border-radius: 10px;
-  padding: 1.4rem 1.6rem;
-  color: #f93b1d;
-  font-size: 1.6rem;
-  font-weight: bold;
-  text-align: center;
-`;
-
 const PlusIcon = styled.img`
   margin-right: 0.6rem;
 `;
@@ -288,6 +274,7 @@ const Card = styled.div`
   box-shadow: 5px 5px 12px 0 rgba(2, 21, 38, 0.08);
   border-radius: 15px;
   position: relative;
+  cursor: pointer;
 `;
 
 const CardImg = styled.img`

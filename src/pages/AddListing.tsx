@@ -3,6 +3,7 @@ import styled from "styled-components";
 import DragAndDrop from "../components/DragAndDrop";
 import { useNavigate } from "react-router-dom";
 import Select from "react-select";
+import { StyledPopUpSection } from "../my-styled-components/GlobalStyles";
 import { components, DropdownIndicatorProps } from "react-select";
 import { useForm, SubmitHandler, Controller } from "react-hook-form";
 
@@ -113,7 +114,10 @@ const AddListing: React.FC = () => {
         body: formData,
       }
     );
-    console.log(response);
+    if (response.status === 201) {
+      const data = await response.json();
+      navigate(`/listing/${data.id}`);
+    }
   };
   const city = watch("region_id");
   console.log(city);
