@@ -3,7 +3,6 @@ import styled from "styled-components";
 import DragAndDrop from "../components/DragAndDrop";
 import { useNavigate } from "react-router-dom";
 import Select from "react-select";
-import { StyledPopUpSection } from "../my-styled-components/GlobalStyles";
 import { components, DropdownIndicatorProps } from "react-select";
 import { useForm, SubmitHandler, Controller } from "react-hook-form";
 
@@ -25,7 +24,7 @@ const AddListing: React.FC = () => {
   const navigate = useNavigate();
   const [regions, setRegions] = useState<SelectOption[]>([]);
   const [agents, setAgents] = useState<SelectOption[]>([]);
-  const [cities, setCitites] = useState<SelectOption[]>([]);
+  const [cities, setCitites] = useState<City[]>([]);
 
   const CustomArrow = (props: DropdownIndicatorProps) => {
     return (
@@ -102,6 +101,7 @@ const AddListing: React.FC = () => {
     formState: { errors },
   } = useForm<ListingInputs>();
 
+  const region = watch("region_id");
   const addListing = async (formData) => {
     const response = await fetch(
       "https://api.real-estate-manager.redberryinternship.ge/api/real-estates",
@@ -175,11 +175,7 @@ const AddListing: React.FC = () => {
       );
       if (response.status === 200) {
         const data = await response.json();
-        setCitites(
-          data.map((item) => {
-            return { label: item.name, value: item.id };
-          })
-        );
+        setCitites(data);
       }
     };
     fetchCities();
@@ -288,11 +284,22 @@ const AddListing: React.FC = () => {
                   <Select<SelectOption>
                     {...field}
                     placeholder="ქალაქი"
-                    options={cities?.map((item) => ({
-                      value: item.value,
-                      label: item.label,
-                    }))}
-                    value={cities.find((item) => item.id === field.value)}
+                    options={
+                      region !== 0
+                        ? cities
+                            ?.filter((item) => item.region_id === region)
+                            .map((item) => ({
+                              value: item.id,
+                              label: item.name,
+                            }))
+                        : undefined
+                    }
+                    value={{
+                      label: cities?.find((item) => item.id === field.value)
+                        ?.name,
+                      value: cities?.find((item) => item.id === field.value)
+                        ?.id,
+                    }}
                     components={{ DropdownIndicator: CustomArrow }}
                     styles={dropDownStyles}
                     onChange={(option) =>

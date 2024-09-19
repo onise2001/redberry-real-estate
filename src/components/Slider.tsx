@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
 
@@ -7,8 +7,14 @@ interface ISliderProps {
 }
 
 const Slider: React.FC<ISliderProps> = ({ currentRegionId }) => {
+  const cardRef = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
   const [similarListings, setSimilarListings] = useState<Listing[]>([]);
+  const [transformNumber, setTransformNumber] = useState(0);
+  const [cardWidth, setCardWidth] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+
+  const visibleSlides = 3; // Number of visible slides
 
   useEffect(() => {
     const fetchListings = async () => {
@@ -24,72 +30,155 @@ const Slider: React.FC<ISliderProps> = ({ currentRegionId }) => {
 
       if (response.status === 200) {
         const data = await response.json();
-        setSimilarListings(data);
+        // Add duplicated items at start and end to create infinite loop
+        const listingsWithDuplicates = [
+          data[data.length - 1], // Duplicate last item at the start
+          ...data,
+          data[0], // Duplicate first item at the end
+        ];
+        setSimilarListings(listingsWithDuplicates);
       }
     };
 
     fetchListings();
   }, []);
 
+  useEffect(() => {
+    if (cardRef.current) {
+      const width = cardRef.current.getBoundingClientRect().width + 20;
+      setCardWidth(width);
+    }
+  }, [similarListings]);
+
+  const slideRight = () => {
+    setIsTransitioning(true);
+    setTransformNumber((prev) => prev + cardWidth);
+  };
+
+  const slideLeft = () => {
+    setIsTransitioning(true);
+    setTransformNumber((prev) => prev - cardWidth);
+  };
+
+  // Handle the infinite scrolling effect
+  useEffect(() => {
+    if (!isTransitioning) return;
+
+    if (
+      transformNumber >=
+      (similarListings.length - visibleSlides) * cardWidth
+    ) {
+      setTimeout(() => {
+        // Jump back to the original first slide without animation
+        setIsTransitioning(false);
+        setTransformNumber(cardWidth);
+      }, 300); // Match the CSS transition duration
+    }
+
+    if (transformNumber <= 0) {
+      setTimeout(() => {
+        // Jump to the original last slide without animation
+        setIsTransitioning(false);
+        setTransformNumber(
+          (similarListings.length - visibleSlides - 1) * cardWidth
+        );
+      }, 300);
+    }
+  }, [transformNumber, cardWidth, similarListings.length, isTransitioning]);
+
   return (
-    <StyledSliderContainer>
-      {similarListings
-        .filter((item) => item.city.region_id === currentRegionId)
-        .map((listing) => {
-          return (
-            // <Card key={listing.id}>
-            //   <CardImg src={listing?.image} />
-            //   <CardBody>
-            //     <Price>{`${listing?.price} ₾`}</Price>
-            //     <Address></Address>
-            //   </CardBody>
-            // </Card>
-            <Card
-              key={listing.id}
-              onClick={() => {
-                navigate(`/listing/${listing.id}`);
-              }}
-            >
-              <DealType>
-                {listing.is_rental === 0 ? "იყიდება" : "ქირავდება"}
-              </DealType>
-              <CardImg src={listing.image} />
-              <CardBody>
-                <Price>{listing.price} ₾</Price>
-                <Address>
-                  <img src="/images/location.png" />
-                  {`${listing.city.name}, ${listing.address}`}
-                </Address>
-                <IconsContainer>
-                  <SingleIconContainer>
-                    <img src="/images/bed.png" alt="" />
-                    <IconText>{listing.bedrooms}</IconText>
-                  </SingleIconContainer>
-                  <SingleIconContainer>
-                    <img src="/images/area.png" alt="" />
-                    <IconText>
-                      {listing.area} მ<sup>2</sup>
-                    </IconText>
-                  </SingleIconContainer>
-                  <SingleIconContainer>
-                    <img src="/images/stake.png" alt="" />
-                    <IconText>{listing.zip_code}</IconText>
-                  </SingleIconContainer>
-                </IconsContainer>
-              </CardBody>
-            </Card>
-          );
-        })}
-    </StyledSliderContainer>
+    <SliderSection>
+      <SliderTitle>ბინები მსგავს ლოკაციაზე</SliderTitle>
+      <SliderContainer>
+        <LeftArrow src="/images/arrow-left.png" onClick={slideLeft} />
+        <StyledSliderContainer>
+          <SliderWrapper
+            $slideAmount={transformNumber}
+            $isTransitioning={isTransitioning}
+          >
+            {similarListings
+              .filter((item) => item.city.region_id === currentRegionId)
+              .map((listing, index) => (
+                <Card
+                  ref={index === 1 ? cardRef : null}
+                  key={listing.id}
+                  onClick={() => navigate(`/listing/${listing.id}`)}
+                >
+                  <DealType>
+                    {listing.is_rental === 0 ? "იყიდება" : "ქირავდება"}
+                  </DealType>
+                  <CardImg src={listing.image} />
+                  <CardBody>
+                    <Price>{listing.price} ₾</Price>
+                    <Address>
+                      <img src="/images/location.png" alt="location" />
+                      {`${listing.city.name}, ${listing.address}`}
+                    </Address>
+                    <IconsContainer>
+                      <SingleIconContainer>
+                        <img src="/images/bed.png" alt="bedrooms" />
+                        <IconText>{listing.bedrooms}</IconText>
+                      </SingleIconContainer>
+                      <SingleIconContainer>
+                        <img src="/images/area.png" alt="area" />
+                        <IconText>
+                          {listing.area} მ<sup>2</sup>
+                        </IconText>
+                      </SingleIconContainer>
+                      <SingleIconContainer>
+                        <img src="/images/stake.png" alt="zipcode" />
+                        <IconText>{listing.zip_code}</IconText>
+                      </SingleIconContainer>
+                    </IconsContainer>
+                  </CardBody>
+                </Card>
+              ))}
+          </SliderWrapper>
+        </StyledSliderContainer>
+        <RightArrow src="/images/arrow-right.png" onClick={slideRight} />
+      </SliderContainer>
+    </SliderSection>
   );
 };
 
-const StyledSliderContainer = styled.div`
+const SliderSection = styled.section`
+  display: flex;
+  flex-direction: column;
+  gap: 5.2rem;
+  margin-top: 15.9rem;
+  max-width: 100%;
+  position: relative;
+`;
+
+const SliderTitle = styled.h2`
+  font-size: 3.2rem;
+  font-weight: 500;
+  color: #021526;
+`;
+
+const SliderContainer = styled.div`
+  position: relative;
   display: flex;
   align-items: center;
-  gap: 2rem;
-  overflow-x: auto;
   max-width: 100%;
+`;
+
+const StyledSliderContainer = styled.div`
+  max-width: 100%;
+  overflow: hidden;
+  display: flex;
+  flex-wrap: nowrap;
+`;
+
+const SliderWrapper = styled.div<{
+  $slideAmount: number;
+  $isTransitioning: boolean;
+}>`
+  display: flex;
+  gap: 2rem;
+  transform: ${({ $slideAmount }) => `translateX(-${$slideAmount}px)`};
+  transition: ${({ $isTransitioning }) =>
+    $isTransitioning ? "transform 0.3s ease-in-out" : "none"};
 `;
 
 const Card = styled.div`
@@ -97,6 +186,7 @@ const Card = styled.div`
   box-shadow: 5px 5px 12px 0 rgba(2, 21, 38, 0.08);
   border-radius: 15px;
   position: relative;
+  cursor: pointer;
 `;
 
 const CardImg = styled.img`
@@ -141,7 +231,6 @@ const SingleIconContainer = styled.div`
 
 const IconText = styled.span`
   font-size: 1.6rem;
-
   color: rgba(2, 21, 38, 0.7);
 `;
 
@@ -155,6 +244,22 @@ const DealType = styled.p`
   position: absolute;
   top: 2.3rem;
   left: 2.3rem;
+`;
+
+const LeftArrow = styled.img`
+  position: absolute;
+  top: 50%;
+  left: -4rem;
+  transform: translateY(-50%);
+  cursor: pointer;
+`;
+
+const RightArrow = styled.img`
+  position: absolute;
+  top: 50%;
+  right: -4rem;
+  transform: translateY(-50%);
+  cursor: pointer;
 `;
 
 export default Slider;

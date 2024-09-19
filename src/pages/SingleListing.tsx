@@ -141,8 +141,7 @@ export default function SingleListing() {
           </ConfirmContainer>
         </DeleteContainer>
       </StyledPopUpSection>
-      <CreatedAt>{`გამოქვეყნების თარიღი ${listing?.created_at}`}</CreatedAt>
-
+      {/* <CreatedAt>{`გამოქვეყნების თარიღი ${listing?.created_at}`}</CreatedAt> */}
       <Slider currentRegionId={listing?.city.region_id} />
     </StyledSection>
   );
@@ -152,17 +151,15 @@ const StyledSection = styled.section`
   display: flex;
   flex-direction: column;
   align-items: center;
-  padding: 0 16.7rem 0 16.2rem;
+  padding: 0 16.2rem;
 `;
 
 const ListingWrapper = styled.div`
   width: 100%;
   display: flex;
-
   align-items: center;
   justify-content: flex-start;
   gap: 7rem;
-  padding-right: 18rem;
 `;
 
 const ListingImage = styled.img`
