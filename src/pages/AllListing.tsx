@@ -40,13 +40,6 @@ const AllListing: React.FC = () => {
       }
     };
     fetchListings();
-
-    // const filters = localStorage.getItem("filters");
-    // if (filters) {
-    //   const savedFilters: AllFilters = JSON.parse(filters);
-    //   setAllFilters(...savedFilters);
-    // }
-    console.log("Remounted");
   }, []);
 
   console.log(allFilters);
@@ -365,7 +358,9 @@ const Clear = styled.span`
   font-size: 1.4rem;
   font-weight: 500;
   text-align: center;
+  margin-left: 0.8rem;
   color: #021526;
+  cursor: pointer;
 `;
 
 export default AllListing;

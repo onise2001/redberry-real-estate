@@ -1,11 +1,22 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
+import { useMask } from "@react-input/mask";
 
 interface IFiltersProps {
   setAllFilters: React.Dispatch<React.SetStateAction<AllFilters>>;
   allFilters: AllFilters;
 }
 const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
+  const filterRef = useMask({
+    mask: "______________",
+    replacement: { _: /[0-9]/ },
+  });
+
+  const bedroomsRef = useMask({
+    mask: "__",
+    replacement: { _: /[0-9]/ },
+  });
+
   const filters = [
     "რეგიონი",
     "საფასო კატეგორია",
@@ -34,7 +45,6 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
   });
 
   const [bedroomsNum, setBedroomsNum] = useState<string>("");
-  // Fetch all regions in useEffect
   const [regions, setRegions] = useState<Region[]>();
   useEffect(() => {
     const fetchRegions = async () => {
@@ -47,11 +57,15 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
       }
     };
     fetchRegions();
+
+    const filters = localStorage.getItem("filters");
+    if (filters) {
+      const savedFilters: AllFilters = JSON.parse(filters);
+      setAllFilters({ ...savedFilters });
+    }
+    console.log("Remounted");
   }, []);
 
-  //
-
-  // Change which filter to show
   const filterChange = (filter: number) => {
     if (filterToShow == filters[filter] || !filters[filter]) {
       setFilterToShow("");
@@ -61,7 +75,6 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
   };
 
   //console.log(allFilters);
-
   return (
     <StyledFiltersWrapper>
       <SingleFilterWrapper $active={filterToShow == filters[0]}>
@@ -97,7 +110,12 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
           </RegionsContainer>
           <ChooseButton
             onClick={() => {
-              setAllFilters((prev) => ({ ...prev, region: filterRegions }));
+              setAllFilters((prev) => {
+                const updatedState = { ...prev, region: filterRegions };
+                localStorage.setItem("filters", JSON.stringify(updatedState));
+                setFilterToShow("");
+                return updatedState;
+              });
             }}
           >
             არჩევა
@@ -118,7 +136,7 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
           <InputWrapper>
             <SingleInputWrapper>
               <StyledInput
-                type="number"
+                ref={filterRef}
                 placeholder="დან"
                 onChange={(event) => {
                   setPriceRange((prev) => ({
@@ -132,7 +150,7 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
             </SingleInputWrapper>
             <SingleInputWrapper>
               <StyledInput
-                type="number"
+                ref={filterRef}
                 placeholder="მდე"
                 onChange={(event) => {
                   setPriceRange((prev) => ({
@@ -149,19 +167,44 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
             <PriceAndAreaColumn>
               <PriceTitle>მინ. ფასი</PriceTitle>
               {prices.map((item) => {
-                return <StyledLi key={item}>{`${item} ₾`}</StyledLi>;
+                return (
+                  <StyledLi
+                    key={item}
+                    onClick={() => {
+                      setPriceRange((prev) => ({
+                        ...prev,
+                        min: item.replace(",", ""),
+                      }));
+                    }}
+                  >{`${item} ₾`}</StyledLi>
+                );
               })}
             </PriceAndAreaColumn>
             <PriceAndAreaColumn>
               <PriceTitle>მაქს. ფასი</PriceTitle>
               {prices.map((item) => {
-                return <StyledLi key={item}>{`${item} ₾`}</StyledLi>;
+                return (
+                  <StyledLi
+                    key={item}
+                    onClick={() => {
+                      setPriceRange((prev) => ({
+                        ...prev,
+                        max: item.replace(",", ""),
+                      }));
+                    }}
+                  >{`${item} ₾`}</StyledLi>
+                );
               })}
             </PriceAndAreaColumn>
           </PricesAndAreaWrapper>
           <ChooseButton
             onClick={() => {
-              setAllFilters((prev) => ({ ...prev, price: priceRange }));
+              setAllFilters((prev) => {
+                const updatedState = { ...prev, price: priceRange };
+                localStorage.setItem("filters", JSON.stringify(updatedState));
+                setFilterToShow("");
+                return updatedState;
+              });
             }}
           >
             არჩევა
@@ -182,7 +225,6 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
           <InputWrapper>
             <SingleInputWrapper>
               <StyledInput
-                type="number"
                 placeholder="დან"
                 onChange={(event) => {
                   setAreaRange((prev) => ({
@@ -198,7 +240,6 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
             </SingleInputWrapper>
             <SingleInputWrapper>
               <StyledInput
-                type="number"
                 placeholder="მდე"
                 onChange={(event) => {
                   setAreaRange((prev) => ({
@@ -220,7 +261,15 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
               </PriceTitle>
               {areas.map((item) => {
                 return (
-                  <StyledLi key={Math.random()}>
+                  <StyledLi
+                    key={Math.random()}
+                    onClick={() => {
+                      setAreaRange((prev) => ({
+                        ...prev,
+                        min: item,
+                      }));
+                    }}
+                  >
                     {`${item} `}მ<sup>2</sup>
                   </StyledLi>
                 );
@@ -232,7 +281,15 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
               </PriceTitle>
               {areas.map((item) => {
                 return (
-                  <StyledLi>
+                  <StyledLi
+                    key={Math.random() * 2}
+                    onClick={() => {
+                      setAreaRange((prev) => ({
+                        ...prev,
+                        max: item,
+                      }));
+                    }}
+                  >
                     {`${item} `}მ<sup>2</sup>
                   </StyledLi>
                 );
@@ -241,7 +298,12 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
           </PricesAndAreaWrapper>
           <ChooseButton
             onClick={() => {
-              setAllFilters((prev) => ({ ...prev, area: areaRange }));
+              setAllFilters((prev) => {
+                const updatedState = { ...prev, area: areaRange };
+                localStorage.setItem("filters", JSON.stringify(updatedState));
+                setFilterToShow("");
+                return updatedState;
+              });
             }}
           >
             არჩევა
@@ -260,7 +322,7 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
         <BedroomPopup $active={filterToShow === filters[3]}>
           <FilterTitle>საძინებლების რაოდენობა</FilterTitle>
           <BedroomInput
-            type="text"
+            ref={bedroomsRef}
             placeholder="0"
             onChange={(event) => {
               setBedroomsNum(event.target.value);
@@ -269,7 +331,12 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
           />
           <ChooseButton
             onClick={() => {
-              setAllFilters((prev) => ({ ...prev, bedrooms: bedroomsNum }));
+              setAllFilters((prev) => {
+                const updatedState = { ...prev, bedrooms: bedroomsNum };
+                localStorage.setItem("filters", JSON.stringify(updatedState));
+                setFilterToShow("");
+                return updatedState;
+              });
             }}
           >
             არჩევა

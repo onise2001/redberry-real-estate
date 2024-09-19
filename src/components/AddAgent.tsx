@@ -4,6 +4,8 @@ import DragAndDrop from "./DragAndDrop";
 import { useNavigate } from "react-router-dom";
 import { StyledPopUpSection } from "../my-styled-components/GlobalStyles";
 import { useForm, SubmitHandler, Controller } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
 
 interface IAddAgentProps {
   active: boolean;
@@ -32,12 +34,33 @@ const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
       }
     );
     console.log(response);
-    if (response.status === 200) {
-      console.log("added");
+    if (response.status === 201) {
+      setActive(false);
     } else {
       throw alert("Something Went wrong");
     }
   };
+
+  const schema = yup.object({
+    name: yup.string().min(2, "error").required(),
+    surname: yup.string().min(2).required(),
+    email: yup
+      .string()
+      .test(
+        "ends-with",
+        "email validation",
+        (value) => value?.endsWith("@redberry.ge") || false
+      )
+      .required(),
+    phone: yup
+      .string()
+      .matches(
+        /^5\d{8}$/,
+        "ტელეფონის ნომერი უნდა იწყებოდეს 5-ით და შეიცავდეს 9 ციფრს"
+      )
+      .required(),
+    avatar: yup.mixed().required("Avatar is required"),
+  });
 
   const {
     register,
@@ -45,7 +68,10 @@ const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
     control,
     watch,
     formState: { errors },
-  } = useForm<AgentInputs>();
+  } = useForm<AgentInputs>({
+    resolver: yupResolver(schema),
+    mode: "onChange",
+  });
 
   const submit: SubmitHandler<AgentInputs> = (data) => {
     const formData = new FormData();
@@ -57,6 +83,8 @@ const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
     addAgent(formData);
   };
 
+  console.log(errors);
+
   return (
     <StyledPopUpSection $active={active}>
       <FormContainer>
@@ -66,7 +94,10 @@ const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
             <SingleInputWrapper>
               <StyledLabel htmlFor="firstname">სახელი*</StyledLabel>
               <StyledInput type="text" id="firstname" {...register("name")} />
-              <ValidationMessage>
+              <ValidationMessage
+                $hasError={Boolean(errors.name)}
+                $isValid={Boolean(watch("name") && !errors.name)}
+              >
                 <CheckIcon src="/images/check.png" />
                 მინიმუმ ორი სიმბოლო
               </ValidationMessage>
@@ -74,7 +105,10 @@ const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
             <SingleInputWrapper>
               <StyledLabel htmlFor="lastname">გვარი</StyledLabel>
               <StyledInput type="text" id="lastname" {...register("surname")} />
-              <ValidationMessage>
+              <ValidationMessage
+                $hasError={Boolean(errors.surname)}
+                $isValid={Boolean(watch("name") && !errors.surname)}
+              >
                 <CheckIcon src="/images/check.png" />
                 მინიმუმ ორი სიმბოლო
               </ValidationMessage>
@@ -84,7 +118,10 @@ const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
             <SingleInputWrapper>
               <StyledLabel htmlFor="email">ელ-ფოსტა*</StyledLabel>
               <StyledInput type="text" id="email" {...register("email")} />
-              <ValidationMessage>
+              <ValidationMessage
+                $hasError={Boolean(errors.email)}
+                $isValid={Boolean(watch("email") && !errors.email)}
+              >
                 <CheckIcon src="/images/check.png" />
                 გამოიყენეთ @redberry.ge ფოსტა
               </ValidationMessage>
@@ -96,7 +133,10 @@ const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
                 id="phone-number"
                 {...register("phone")}
               />
-              <ValidationMessage>
+              <ValidationMessage
+                $hasError={Boolean(errors.phone)}
+                $isValid={Boolean(watch("phone") && !errors.phone)}
+              >
                 <CheckIcon src="/images/check.png" />
                 მხოლოდ რიცხვები
               </ValidationMessage>
@@ -205,9 +245,13 @@ const StyledInput = styled.input`
   border: solid 1px #808a93;
 `;
 
-const ValidationMessage = styled.span`
+const ValidationMessage = styled.span<{
+  $isValid: boolean;
+  $hasError: boolean;
+}>`
   font-size: 1.4rem;
-  color: #021526;
+  color: ${({ $isValid, $hasError }) =>
+    $hasError ? "red" : $isValid ? "green" : "#021526"};
 `;
 
 const CheckIcon = styled.img`

@@ -58,7 +58,11 @@ export default function SingleListing() {
   return (
     <StyledSection>
       <ListingWrapper>
-        <ListingImage src={listing?.image} />
+        <ImageWrapper>
+          <BackImage src="/images/arrow-left.png" />
+          <ListingImage src={listing?.image} />
+          <CreatedAt>{`გამოქვეყნების თარიღი ${listing?.created_at}`}</CreatedAt>
+        </ImageWrapper>
         <ListingInfoWrapper>
           <ListingPrice>{`${listing?.price} ₾`}</ListingPrice>
           <StyledUl>
@@ -162,6 +166,18 @@ const ListingWrapper = styled.div`
   gap: 7rem;
 `;
 
+const ImageWrapper = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 1.1rem;
+`;
+
+const BackImage = styled.img`
+  width: 2.5rem;
+  height: 2.5rem;
+  margin-bottom: 2.4rem;
+`;
+
 const ListingImage = styled.img`
   max-width: 83rem;
 `;
@@ -170,6 +186,7 @@ const ListingInfoWrapper = styled.div`
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  padding-top: 6rem;
 `;
 
 const ListingPrice = styled.h2`
@@ -259,12 +276,17 @@ const DeleteListing = styled.button`
   border-radius: 8px;
   border: solid 1px #676e76;
   max-width: 13rem;
+  cursor: pointer;
+  &:hover {
+    background-color: #808a93;
+    color: #fff;
+  }
 `;
 
 const CreatedAt = styled.span`
   font-size: 1.6rem;
   color: #808a93;
-  align-self: center;
+  align-self: flex-end;
 `;
 
 const DeleteContainer = styled.div`

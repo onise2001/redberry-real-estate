@@ -41,6 +41,10 @@ export const OrangeButton = styled.button`
   background-color: #f93b1d;
   color: #fff;
   border-radius: 10px;
+  cursor: pointer;
+  &:hover {
+    background-color: #df3014;
+  }
 `;
 
 export const WhiteButton = styled.button`
@@ -52,6 +56,11 @@ export const WhiteButton = styled.button`
   font-size: 1.6rem;
   font-weight: bold;
   text-align: center;
+  cursor: pointer;
+  &:hover {
+    background-color: #f93b1d;
+    color: #fff;
+  }
 `;
 
 export default GlobalStyles;

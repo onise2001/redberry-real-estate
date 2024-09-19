@@ -5,6 +5,8 @@ import { useNavigate } from "react-router-dom";
 import Select from "react-select";
 import { components, DropdownIndicatorProps } from "react-select";
 import { useForm, SubmitHandler, Controller } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
 
 type ListingInputs = {
   address: string;
@@ -93,13 +95,33 @@ const AddListing: React.FC = () => {
     }),
   };
 
+  const schema = yup.object({
+    is_rental: yup.string().matches(/^\d+$/, "error").required(),
+    address: yup.string().min(2, "error").required(),
+    zip_code: yup.string().matches(/^\d+$/, "error").required(),
+    region_id: yup.string().matches(/^\d+$/, "error").required(),
+    city_id: yup.string().matches(/^\d+$/, "error").required(),
+    price: yup.string().matches(/^\d+$/, "error").required(),
+    area: yup
+      .string()
+      .matches(/^-?\d+(\.\d+)?$/, "error")
+      .required(),
+    bedrooms: yup.string().matches(/^\d+$/, "error").required(),
+    description: yup.string().required("error"),
+    image: yup.mixed().required(),
+    agent_id: yup.string().matches(/^\d+$/, "error").required(),
+  });
+
   const {
     register,
     watch,
     control,
     handleSubmit,
     formState: { errors },
-  } = useForm<ListingInputs>();
+  } = useForm<ListingInputs>({
+    resolver: yupResolver(schema),
+    mode: "all",
+  });
 
   const region = watch("region_id");
   const addListing = async (formData) => {
@@ -119,11 +141,8 @@ const AddListing: React.FC = () => {
       navigate(`/listing/${data.id}`);
     }
   };
-  const city = watch("region_id");
-  console.log(city);
 
   const submit: SubmitHandler<ListingInputs> = (data) => {
-    console.log(data);
     const formData = new FormData();
     Object.entries(data).forEach(([key, value]) => {
       formData.append(key, value);
@@ -229,7 +248,10 @@ const AddListing: React.FC = () => {
             <SingleInputWrapper>
               <StyledLabel htmlFor="address">მისამართი*</StyledLabel>
               <StyledInput type="text" id="address" {...register("address")} />
-              <ValidationMessage>
+              <ValidationMessage
+                $hasError={Boolean(errors.address)}
+                $isValid={Boolean(watch("address") && !errors.address)}
+              >
                 <CheckIcon src="/images/check.png" />
                 მინიმუმ ორი სიმბოლო
               </ValidationMessage>
@@ -241,7 +263,10 @@ const AddListing: React.FC = () => {
                 id="zip_code"
                 {...register("zip_code")}
               />
-              <ValidationMessage>
+              <ValidationMessage
+                $hasError={Boolean(errors.zip_code)}
+                $isValid={Boolean(watch("zip_code") && !errors.zip_code)}
+              >
                 <CheckIcon src="/images/check.png" />
                 მხოლოდ რიცხვები
               </ValidationMessage>
@@ -320,7 +345,10 @@ const AddListing: React.FC = () => {
             <SingleInputWrapper>
               <StyledLabel htmlFor="price">ფასი</StyledLabel>
               <StyledInput type="text" id="price" {...register("price")} />
-              <ValidationMessage>
+              <ValidationMessage
+                $hasError={Boolean(errors.price)}
+                $isValid={Boolean(watch("price") && !errors.price)}
+              >
                 <CheckIcon src="/images/check.png" />
                 მხოლოდ რიცხვები
               </ValidationMessage>
@@ -328,7 +356,10 @@ const AddListing: React.FC = () => {
             <SingleInputWrapper>
               <StyledLabel htmlFor="area">ფართობი</StyledLabel>
               <StyledInput type="text" id="area" {...register("area")} />
-              <ValidationMessage>
+              <ValidationMessage
+                $hasError={Boolean(errors.area)}
+                $isValid={Boolean(watch("area") && !errors.area)}
+              >
                 <CheckIcon src="/images/check.png" />
                 მხოლოდ რიცხვები
               </ValidationMessage>
@@ -344,7 +375,10 @@ const AddListing: React.FC = () => {
                 id="bedrooms"
                 {...register("bedrooms")}
               />
-              <ValidationMessage>
+              <ValidationMessage
+                $hasError={Boolean(errors.bedrooms)}
+                $isValid={Boolean(watch("bedrooms") && !errors.bedrooms)}
+              >
                 <CheckIcon src="/images/check.png" />
                 მხოლოდ რიცხვები
               </ValidationMessage>
@@ -512,9 +546,13 @@ const StyledTextArea = styled.textarea`
 
 const StyledRadioButton = styled.input``;
 
-const ValidationMessage = styled.span`
+const ValidationMessage = styled.span<{
+  $isValid: boolean;
+  $hasError: boolean;
+}>`
   font-size: 1.4rem;
-  color: #021526;
+  color: ${({ $isValid, $hasError }) =>
+    $hasError ? "red" : $isValid ? "green" : "#021526"};
 `;
 
 const CheckIcon = styled.img`
