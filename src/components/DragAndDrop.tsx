@@ -4,26 +4,27 @@ import styled from "styled-components";
 
 interface DragAndDropProps {
   onDrop: (acceptedFiles: File) => void;
+  $hasError: boolean;
 }
 
-const DragAndDrop: React.FC<DragAndDropProps> = ({ onDrop }) => {
+const DragAndDrop: React.FC<DragAndDropProps> = ({ onDrop, $hasError }) => {
   const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     onDrop: (acceptedFiles) => {
-      const file = acceptedFiles[0]; // Only accept a single file
+      const file = acceptedFiles[0];
       if (file) {
         setUploadedFile(file);
-        onDrop(file); // Pass the single file to the parent via onDrop
+        onDrop(file);
       }
-    }, // Call handleDrop when files are dropped
+    },
     accept: { "image/*": [] },
     multiple: false,
   });
 
   return (
     <Container>
-      <DropArea {...getRootProps()}>
+      <DropArea $hasError={$hasError} {...getRootProps()}>
         <input {...getInputProps()} />
         {isDragActive ? (
           <Text>Drop the file here ...</Text>
@@ -52,10 +53,11 @@ const Container = styled.div`
   width: 100%;
 `;
 
-const DropArea = styled.div`
+const DropArea = styled.div<{ $hasError: boolean }>`
   width: 100%;
   height: 12rem;
-  border: 2px dashed #cccccc;
+  border: ${({ $hasError }) =>
+    $hasError ? " 2px dashed red" : " 2px dashed #cccccc"};
   border-radius: 10px;
   display: flex;
   align-items: center;

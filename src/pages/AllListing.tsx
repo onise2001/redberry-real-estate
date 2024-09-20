@@ -6,6 +6,7 @@ import { useNavigate, Link } from "react-router-dom";
 import {
   OrangeButton,
   WhiteButton,
+  NoInfoSpan,
 } from "../my-styled-components/GlobalStyles";
 
 const AllListing: React.FC = () => {
@@ -13,6 +14,7 @@ const AllListing: React.FC = () => {
   const [active, setActive] = useState<boolean>(false);
 
   const [listings, setListings] = useState<Listing[]>([]);
+  const [filteredListings, setFilteredListings] = useState<Listingp[]>([]);
   const [allFilters, setAllFilters] = useState<AllFilters>({
     region: [],
     area: { min: "", max: "" },
@@ -42,27 +44,80 @@ const AllListing: React.FC = () => {
     fetchListings();
   }, []);
 
-  console.log(allFilters);
+  const filterListings = () => {
+    return listings.filter((item) => {
+      let filtered = true;
+      if (allFilters.region.length > 0) {
+        if (!regionIds.includes(item.city.region_id)) filtered = false;
+      }
+      if (allFilters.area.min && allFilters.area.max) {
+        if (
+          !(
+            item.area >= parseInt(allFilters.area.min) &&
+            item.area <= parseInt(allFilters.area.max)
+          )
+        ) {
+          filtered = false;
+        }
+      }
 
+      if (allFilters.price.min && allFilters.price.max) {
+        if (
+          !(
+            item.price >= parseInt(allFilters.price.min) &&
+            item.price <= parseInt(allFilters.price.max)
+          )
+        ) {
+          filtered = false;
+        }
+      }
+
+      if (allFilters.bedrooms) {
+        if (!(item.bedrooms === parseInt(allFilters.bedrooms))) {
+          filtered = false;
+        }
+      }
+
+      return filtered;
+    });
+  };
+
+  const [isHovering, setIsHovering] = useState<boolean>(false);
+
+  console.log(listings);
   return (
     <StyledSection>
       <AddAgent active={active} setActive={setActive} />
       <StyledContainer>
         <Filters setAllFilters={setAllFilters} allFilters={allFilters} />
         <ButtonsContainer>
-          <Link to="/add-listing">
-            <OrangeButton>
-              <PlusIcon src="/images/white-cross.png" />
-              ლისტინგის დამატება
-            </OrangeButton>
-          </Link>
+          <OrangeButton
+            onClick={() => {
+              navigate("/add-listing");
+            }}
+          >
+            <PlusIcon src="/images/white-cross.png" />
+            ლისტინგის დამატება
+          </OrangeButton>
 
           <WhiteButton
+            onMouseEnter={() => {
+              setIsHovering(true);
+            }}
+            onMouseLeave={() => {
+              setIsHovering(false);
+            }}
             onClick={() => {
               setActive(true);
             }}
           >
-            <PlusIcon src="/images/orange-cross.png" />
+            <PlusIcon
+              src={
+                isHovering
+                  ? "/images/white-cross.png"
+                  : "/images/orange-cross.png"
+              }
+            />
             აგენტის დამატება
           </WhiteButton>
         </ButtonsContainer>
@@ -75,12 +130,19 @@ const AllListing: React.FC = () => {
               <CloseIcon
                 src="/images/close.png"
                 onClick={() => {
-                  setAllFilters((prev) => ({
-                    ...prev,
-                    region: allFilters.region.filter(
-                      (reg) => reg.id !== item.id
-                    ),
-                  }));
+                  setAllFilters((prev) => {
+                    const updatedState = {
+                      ...prev,
+                      region: allFilters.region.filter(
+                        (reg) => reg.id !== item.id
+                      ),
+                    };
+                    localStorage.setItem(
+                      "filters",
+                      JSON.stringify(updatedState)
+                    );
+                    return updatedState;
+                  });
                 }}
               />
             </SingleFilterWrapper>
@@ -96,10 +158,14 @@ const AllListing: React.FC = () => {
             <CloseIcon
               src="/images/close.png"
               onClick={() => {
-                setAllFilters((prev) => ({
-                  ...prev,
-                  area: { min: "", max: "" },
-                }));
+                setAllFilters((prev) => {
+                  const updatedState = {
+                    ...prev,
+                    area: { min: "", max: "" },
+                  };
+                  localStorage.setItem("filters", JSON.stringify(updatedState));
+                  return updatedState;
+                });
               }}
             />
           </SingleFilterWrapper>
@@ -113,10 +179,14 @@ const AllListing: React.FC = () => {
             <CloseIcon
               src="/images/close.png"
               onClick={() => {
-                setAllFilters((prev) => ({
-                  ...prev,
-                  price: { min: "", max: "" },
-                }));
+                setAllFilters((prev) => {
+                  const updatedState = {
+                    ...prev,
+                    price: { min: "", max: "" },
+                  };
+                  localStorage.setItem("filters", JSON.stringify(updatedState));
+                  return updatedState;
+                });
               }}
             />
           </SingleFilterWrapper>
@@ -128,7 +198,14 @@ const AllListing: React.FC = () => {
             <CloseIcon
               src="/images/close.png"
               onClick={() => {
-                setAllFilters((prev) => ({ ...prev, bedrooms: "" }));
+                setAllFilters((prev) => {
+                  const updatedState = {
+                    ...prev,
+                    bedrooms: "",
+                  };
+                  localStorage.setItem("filters", JSON.stringify(updatedState));
+                  return updatedState;
+                });
               }}
             />
           </SingleFilterWrapper>
@@ -148,6 +225,8 @@ const AllListing: React.FC = () => {
                 price: { min: "", max: "" },
                 bedrooms: "",
               });
+
+              localStorage.removeItem("filters");
             }}
           >
             გასუფთავება
@@ -156,43 +235,8 @@ const AllListing: React.FC = () => {
       </FiltersContainer>
 
       <ListingsContainer>
-        {listings
-          .filter((item) => {
-            let filtered = true;
-            if (allFilters.region.length > 0) {
-              if (!regionIds.includes(item.city.region_id)) filtered = false;
-            }
-            if (allFilters.area.min && allFilters.area.max) {
-              if (
-                !(
-                  item.area >= parseInt(allFilters.area.min) &&
-                  item.area <= parseInt(allFilters.area.max)
-                )
-              ) {
-                filtered = false;
-              }
-            }
-
-            if (allFilters.price.min && allFilters.price.max) {
-              if (
-                !(
-                  item.price >= parseInt(allFilters.price.min) &&
-                  item.price <= parseInt(allFilters.price.max)
-                )
-              ) {
-                filtered = false;
-              }
-            }
-
-            if (allFilters.bedrooms) {
-              if (!(item.bedrooms === parseInt(allFilters.bedrooms))) {
-                filtered = false;
-              }
-            }
-
-            return filtered;
-          })
-          .map((item) => {
+        {filterListings().length > 0 ? (
+          filterListings().map((item) => {
             return (
               <Card
                 key={item.id}
@@ -229,7 +273,10 @@ const AllListing: React.FC = () => {
                 </CardBody>
               </Card>
             );
-          })}
+          })
+        ) : (
+          <NoInfoSpan>აღნიშნული მონაცემებით განცხადება არ იძებნება</NoInfoSpan>
+        )}
       </ListingsContainer>
     </StyledSection>
   );
@@ -260,6 +307,7 @@ const ListingsContainer = styled.div`
   display: flex;
   flex-wrap: wrap;
   gap: 2rem;
+  padding-bottom: 10rem;
 `;
 
 const Card = styled.div`

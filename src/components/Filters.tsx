@@ -1,22 +1,21 @@
 import React, { useEffect, useState } from "react";
 import styled from "styled-components";
 import { useMask } from "@react-input/mask";
+import { useForm, SubmitHandler } from "react-hook-form";
+import { yupResolver } from "@hookform/resolvers/yup";
+import * as yup from "yup";
+import { Error } from "../my-styled-components/GlobalStyles";
 
 interface IFiltersProps {
   setAllFilters: React.Dispatch<React.SetStateAction<AllFilters>>;
   allFilters: AllFilters;
+  
 }
 const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
-  const filterRef = useMask({
-    mask: "______________",
-    replacement: { _: /[0-9]/ },
-  });
-
-  const bedroomsRef = useMask({
+  const bedroomRef = useMask({
     mask: "__",
     replacement: { _: /[0-9]/ },
   });
-
   const filters = [
     "რეგიონი",
     "საფასო კატეგორია",
@@ -31,20 +30,10 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
     "300,000",
   ];
   const areas: string[] = ["20", "50", "100", "200", "300"];
+
   const [filterToShow, setFilterToShow] = useState<string>("");
-
   const [filterRegions, setFilterRegions] = useState<Region[]>([]);
-  const [priceRange, setPriceRange] = useState<{ min: string; max: string }>({
-    min: "",
-    max: "",
-  });
 
-  const [areaRange, setAreaRange] = useState<{ min: string; max: string }>({
-    min: "",
-    max: "",
-  });
-
-  const [bedroomsNum, setBedroomsNum] = useState<string>("");
   const [regions, setRegions] = useState<Region[]>();
   useEffect(() => {
     const fetchRegions = async () => {
@@ -65,7 +54,6 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
     }
     console.log("Remounted");
   }, []);
-
   const filterChange = (filter: number) => {
     if (filterToShow == filters[filter] || !filters[filter]) {
       setFilterToShow("");
@@ -74,7 +62,54 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
     }
   };
 
-  //console.log(allFilters);
+  const [bedroomsNum, setBedroomsNum] = useState<string>("");
+
+  interface RangeInputs {
+    min: string;
+    max: string;
+  }
+
+  const rangeResolver = yup.object({
+    min: yup.string().matches(/^\d+$/).required(),
+    max: yup
+      .string()
+      .matches(/^\d+$/)
+      .required()
+      .test("is-greater", "", function (value) {
+        const { min } = this.parent;
+        return parseInt(value) >= parseInt(min);
+      }),
+  });
+
+  const priceRange = useForm<RangeInputs>({
+    resolver: yupResolver(rangeResolver),
+    mode: "all",
+  });
+
+  const areaRange = useForm<RangeInputs>({
+    resolver: yupResolver(rangeResolver),
+    mode: "all",
+  });
+
+  const priceSubmit: SubmitHandler<RangeInputs> = (data) => {
+    setAllFilters((prev) => {
+      const updatedState = { ...prev, price: data };
+      localStorage.setItem("filters", JSON.stringify(updatedState));
+      setFilterToShow("");
+      return updatedState;
+    });
+  };
+
+  const areaSubmit: SubmitHandler<RangeInputs> = (data) => {
+    setAllFilters((prev) => {
+      const updatedState = { ...prev, area: data };
+      localStorage.setItem("filters", JSON.stringify(updatedState));
+      setFilterToShow("");
+      return updatedState;
+    });
+  };
+
+  console.log(priceRange.formState.errors);
   return (
     <StyledFiltersWrapper>
       <SingleFilterWrapper $active={filterToShow == filters[0]}>
@@ -131,38 +166,25 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
           საფასო კატეგორია
         </FilterText>
         <ArrowIcon src="/images/arrow.png" />
-        <PriceAndAreaPopup $active={filterToShow === filters[1]}>
+        <PriceAndAreaPopup
+          $active={filterToShow === filters[1]}
+          onSubmit={priceRange.handleSubmit(priceSubmit)}
+        >
           <FilterTitle>ფასის მიხედვით</FilterTitle>
           <InputWrapper>
             <SingleInputWrapper>
-              <StyledInput
-                ref={filterRef}
-                placeholder="დან"
-                onChange={(event) => {
-                  setPriceRange((prev) => ({
-                    ...prev,
-                    min: event?.target.value,
-                  }));
-                }}
-                value={priceRange.min}
-              />
+              <StyledInput {...priceRange.register("min")} placeholder="დან" />
               <InputText>₾</InputText>
             </SingleInputWrapper>
             <SingleInputWrapper>
-              <StyledInput
-                ref={filterRef}
-                placeholder="მდე"
-                onChange={(event) => {
-                  setPriceRange((prev) => ({
-                    ...prev,
-                    max: event?.target.value,
-                  }));
-                }}
-                value={priceRange.max}
-              />
+              <StyledInput {...priceRange.register("max")} placeholder="მდე" />
               <InputText>₾</InputText>
             </SingleInputWrapper>
           </InputWrapper>
+          {priceRange.formState.errors.min ||
+          priceRange.formState.errors.max ? (
+            <Error>ჩაწერეთ ვალიდური მონაცემები</Error>
+          ) : null}
           <PricesAndAreaWrapper>
             <PriceAndAreaColumn>
               <PriceTitle>მინ. ფასი</PriceTitle>
@@ -171,10 +193,7 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
                   <StyledLi
                     key={item}
                     onClick={() => {
-                      setPriceRange((prev) => ({
-                        ...prev,
-                        min: item.replace(",", ""),
-                      }));
+                      priceRange.setValue("min", item.replace(",", ""));
                     }}
                   >{`${item} ₾`}</StyledLi>
                 );
@@ -187,28 +206,14 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
                   <StyledLi
                     key={item}
                     onClick={() => {
-                      setPriceRange((prev) => ({
-                        ...prev,
-                        max: item.replace(",", ""),
-                      }));
+                      priceRange.setValue("max", item.replace(",", ""));
                     }}
                   >{`${item} ₾`}</StyledLi>
                 );
               })}
             </PriceAndAreaColumn>
           </PricesAndAreaWrapper>
-          <ChooseButton
-            onClick={() => {
-              setAllFilters((prev) => {
-                const updatedState = { ...prev, price: priceRange };
-                localStorage.setItem("filters", JSON.stringify(updatedState));
-                setFilterToShow("");
-                return updatedState;
-              });
-            }}
-          >
-            არჩევა
-          </ChooseButton>
+          <ChooseButton type="submit">არჩევა</ChooseButton>
         </PriceAndAreaPopup>
       </SingleFilterWrapper>
       <SingleFilterWrapper $active={filterToShow === filters[2]}>
@@ -220,40 +225,28 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
           ფართობი
         </FilterText>
         <ArrowIcon src="/images/arrow.png" />
-        <PriceAndAreaPopup $active={filterToShow === filters[2]}>
+        <PriceAndAreaPopup
+          $active={filterToShow === filters[2]}
+          onSubmit={areaRange.handleSubmit(areaSubmit)}
+        >
           <FilterTitle>ფართობის მიხედვით</FilterTitle>
           <InputWrapper>
             <SingleInputWrapper>
-              <StyledInput
-                placeholder="დან"
-                onChange={(event) => {
-                  setAreaRange((prev) => ({
-                    ...prev,
-                    min: event?.target.value,
-                  }));
-                }}
-                value={areaRange.min}
-              />
+              <StyledInput placeholder="დან" {...areaRange.register("min")} />
               <InputText>
                 მ<sup>2</sup>
               </InputText>
             </SingleInputWrapper>
             <SingleInputWrapper>
-              <StyledInput
-                placeholder="მდე"
-                onChange={(event) => {
-                  setAreaRange((prev) => ({
-                    ...prev,
-                    max: event?.target.value,
-                  }));
-                }}
-                value={areaRange.max}
-              />
+              <StyledInput placeholder="მდე" {...areaRange.register("max")} />
               <InputText>
                 მ<sup>2</sup>
               </InputText>
             </SingleInputWrapper>
           </InputWrapper>
+          {areaRange.formState.errors.min || areaRange.formState.errors.max ? (
+            <Error>ჩაწერეთ ვალიდური მონაცემები</Error>
+          ) : null}
           <PricesAndAreaWrapper>
             <PriceAndAreaColumn>
               <PriceTitle>
@@ -261,15 +254,7 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
               </PriceTitle>
               {areas.map((item) => {
                 return (
-                  <StyledLi
-                    key={Math.random()}
-                    onClick={() => {
-                      setAreaRange((prev) => ({
-                        ...prev,
-                        min: item,
-                      }));
-                    }}
-                  >
+                  <StyledLi key={Math.random()}>
                     {`${item} `}მ<sup>2</sup>
                   </StyledLi>
                 );
@@ -281,33 +266,14 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
               </PriceTitle>
               {areas.map((item) => {
                 return (
-                  <StyledLi
-                    key={Math.random() * 2}
-                    onClick={() => {
-                      setAreaRange((prev) => ({
-                        ...prev,
-                        max: item,
-                      }));
-                    }}
-                  >
+                  <StyledLi key={Math.random() * 2}>
                     {`${item} `}მ<sup>2</sup>
                   </StyledLi>
                 );
               })}
             </PriceAndAreaColumn>
           </PricesAndAreaWrapper>
-          <ChooseButton
-            onClick={() => {
-              setAllFilters((prev) => {
-                const updatedState = { ...prev, area: areaRange };
-                localStorage.setItem("filters", JSON.stringify(updatedState));
-                setFilterToShow("");
-                return updatedState;
-              });
-            }}
-          >
-            არჩევა
-          </ChooseButton>
+          <ChooseButton type="submit">არჩევა</ChooseButton>
         </PriceAndAreaPopup>
       </SingleFilterWrapper>
       <SingleFilterWrapper $active={filterToShow === filters[3]}>
@@ -322,12 +288,10 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
         <BedroomPopup $active={filterToShow === filters[3]}>
           <FilterTitle>საძინებლების რაოდენობა</FilterTitle>
           <BedroomInput
-            ref={bedroomsRef}
             placeholder="0"
-            onChange={(event) => {
-              setBedroomsNum(event.target.value);
-            }}
+            ref={bedroomRef}
             value={bedroomsNum}
+            onChange={(event) => setBedroomsNum(event?.target.value)}
           />
           <ChooseButton
             onClick={() => {
@@ -362,6 +326,11 @@ const SingleFilterWrapper = styled.div<{ $active: boolean }>`
   position: relative;
   padding: 0.8rem 1.7rem;
   cursor: pointer;
+
+  &:hover {
+    background-color: #f3f3f3;
+    border-radius: 6px;
+  }
 
   ${({ $active }) =>
     $active &&
@@ -440,7 +409,7 @@ const ChooseButton = styled.button`
   cursor: pointer;
 `;
 
-const PriceAndAreaPopup = styled.div<{ $active: boolean }>`
+const PriceAndAreaPopup = styled.form<{ $active: boolean }>`
   display: ${({ $active }) => ($active ? "flex" : "none")};
   flex-direction: column;
   align-items: flex-start;
@@ -450,6 +419,7 @@ const PriceAndAreaPopup = styled.div<{ $active: boolean }>`
   padding: 2.4rem;
   position: absolute;
   top: 5.2rem;
+  left: -0.3rem;
   background-color: #fff;
   z-index: 100;
   box-shadow: 5px 5px 12px 0 rgba(2, 21, 38, 0.08);
@@ -467,7 +437,7 @@ const StyledInput = styled.input`
   border: solid 1px #808a93;
 `;
 
-const InputWrapper = styled.div`
+const InputWrapper = styled.form`
   display: flex;
   align-items: center;
   gap: 1.5rem;

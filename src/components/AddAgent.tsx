@@ -2,7 +2,20 @@ import React, { useState } from "react";
 import styled from "styled-components";
 import DragAndDrop from "./DragAndDrop";
 import { useNavigate } from "react-router-dom";
-import { StyledPopUpSection } from "../my-styled-components/GlobalStyles";
+import { Error } from "../my-styled-components/GlobalStyles";
+import {
+  OrangeButton,
+  StyledPopUpSection,
+  WhiteButton,
+  StyledInput,
+  StyledLabel,
+  ValidationMessage,
+  SingleInputWrapper,
+  Title,
+  StyledForm,
+  FormContainer,
+} from "../my-styled-components/GlobalStyles";
+
 import { useForm, SubmitHandler, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -21,26 +34,6 @@ type AgentInputs = {
 };
 
 const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
-  const addAgent = async (formData) => {
-    const key = "9cfc8fa2-e80e-42e6-91f0-3eda643de14a";
-    const response = await fetch(
-      "https://api.real-estate-manager.redberryinternship.ge/api/agents",
-      {
-        method: "POST",
-        headers: {
-          Authorization: `Bearer ${key}`,
-        },
-        body: formData,
-      }
-    );
-    console.log(response);
-    if (response.status === 201) {
-      setActive(false);
-    } else {
-      throw alert("Something Went wrong");
-    }
-  };
-
   const schema = yup.object({
     name: yup.string().min(2, "error").required(),
     surname: yup.string().min(2).required(),
@@ -59,7 +52,13 @@ const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
         "ტელეფონის ნომერი უნდა იწყებოდეს 5-ით და შეიცავდეს 9 ციფრს"
       )
       .required(),
-    avatar: yup.mixed().required("Avatar is required"),
+    avatar: yup
+      .mixed()
+      .required("Avatar is required")
+
+      .test("file-size", "Image must not be more than 1Mb", (value) => {
+        return value.size < 1024 * 1024;
+      }),
   });
 
   const {
@@ -68,10 +67,31 @@ const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
     control,
     watch,
     formState: { errors },
+    reset,
   } = useForm<AgentInputs>({
     resolver: yupResolver(schema),
-    mode: "onChange",
+    mode: "all",
   });
+
+  const addAgent = async (formData) => {
+    const key = "9cfc8fa2-e80e-42e6-91f0-3eda643de14a";
+    const response = await fetch(
+      "https://api.real-estate-manager.redberryinternship.ge/api/agents",
+      {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${key}`,
+        },
+        body: formData,
+      }
+    );
+    if (response.status === 201) {
+      reset();
+      setActive(false);
+    } else {
+      throw alert("Something Went wrong");
+    }
+  };
 
   const submit: SubmitHandler<AgentInputs> = (data) => {
     const formData = new FormData();
@@ -83,17 +103,31 @@ const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
     addAgent(formData);
   };
 
-  console.log(errors);
+  console.log(errors.avatar?.message);
 
   return (
-    <StyledPopUpSection $active={active}>
+    <StyledPopUpSection
+      id="popup"
+      $active={active}
+      onClick={(event) => {
+        if (event.target.id === "popup") {
+          reset();
+          setActive(false);
+        }
+      }}
+    >
       <FormContainer>
         <Title>აგენტის დამატება</Title>
         <StyledForm onSubmit={handleSubmit(submit)}>
           <Row>
             <SingleInputWrapper>
               <StyledLabel htmlFor="firstname">სახელი*</StyledLabel>
-              <StyledInput type="text" id="firstname" {...register("name")} />
+              <StyledInput
+                type="text"
+                id="firstname"
+                $hasError={Boolean(errors.name)}
+                {...register("name")}
+              />
               <ValidationMessage
                 $hasError={Boolean(errors.name)}
                 $isValid={Boolean(watch("name") && !errors.name)}
@@ -104,7 +138,12 @@ const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
             </SingleInputWrapper>
             <SingleInputWrapper>
               <StyledLabel htmlFor="lastname">გვარი</StyledLabel>
-              <StyledInput type="text" id="lastname" {...register("surname")} />
+              <StyledInput
+                type="text"
+                id="lastname"
+                $hasError={Boolean(errors.surname)}
+                {...register("surname")}
+              />
               <ValidationMessage
                 $hasError={Boolean(errors.surname)}
                 $isValid={Boolean(watch("name") && !errors.surname)}
@@ -117,7 +156,12 @@ const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
           <Row>
             <SingleInputWrapper>
               <StyledLabel htmlFor="email">ელ-ფოსტა*</StyledLabel>
-              <StyledInput type="text" id="email" {...register("email")} />
+              <StyledInput
+                type="text"
+                id="email"
+                $hasError={Boolean(errors.email)}
+                {...register("email")}
+              />
               <ValidationMessage
                 $hasError={Boolean(errors.email)}
                 $isValid={Boolean(watch("email") && !errors.email)}
@@ -131,6 +175,7 @@ const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
               <StyledInput
                 type="text"
                 id="phone-number"
+                $hasError={Boolean(errors.phone)}
                 {...register("phone")}
               />
               <ValidationMessage
@@ -152,20 +197,23 @@ const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
                   onDrop={(acceptedFiles) => {
                     field.onChange(acceptedFiles);
                   }}
+                  $hasError={Boolean(errors.avatar)}
                 />
               )}
             />
+            {errors.avatar ? <Error>{errors.avatar.message}</Error> : null}
           </SingleInputWrapper>
           <StyledButtonWrapper>
-            <CancelButton
+            <WhiteButton
               type="button"
               onClick={() => {
+                reset();
                 setActive(false);
               }}
             >
               გაუქმება
-            </CancelButton>
-            <SubmitButton type="submit">დაამატე აგენტი</SubmitButton>
+            </WhiteButton>
+            <OrangeButton type="submit">დაამატე აგენტი</OrangeButton>
           </StyledButtonWrapper>
         </StyledForm>
       </FormContainer>
@@ -173,85 +221,12 @@ const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
   );
 };
 
-// const StyledPopUpSection = styled.section<{ $active: boolean }>`
-//   display: ${({ $active }) => ($active ? "flex" : "none")};
-//   position: fixed;
-//   top: 0;
-//   left: 0;
-//   bottom: 0;
-//   right: 0;
-//   z-index: 200;
-//   width: 100vw;
-//   min-height: 100vh;
-//   -webkit-backdrop-filter: blur(10px);
-//   backdrop-filter: blur(10px);
-//   background-color: rgba(2, 21, 38, 0.34);
-//   flex-direction: column;
-//   align-items: center;
-//   justify-content: center;
-// `;
-
-const FormContainer = styled.div`
-  margin: auto;
-  padding: 8.7rem 10.5rem;
-  background-color: #fff;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6rem;
-`;
-
-const Title = styled.h2`
-  font-size: 3.2rem;
-  font-weight: 500;
-  color: #021526;
-`;
-
-const StyledForm = styled.form`
-  display: flex;
-  flex-direction: column;
-  gap: 2.8rem;
-`;
-
 const Row = styled.div`
   width: 100%;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 3.1rem;
-`;
-
-const SingleInputWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.5rem;
-  width: 100%;
-`;
-
-const StyledLabel = styled.label`
-  font-size: 1.4rem;
-  font-weight: 500;
-  color: #021526;
-`;
-
-const StyledInput = styled.input`
-  outline: none;
-  width: 38.4rem;
-  font-size: 1.4rem;
-  color: #021526;
-  padding: 1.25rem 1rem;
-  border-radius: 6px;
-  border: solid 1px #808a93;
-`;
-
-const ValidationMessage = styled.span<{
-  $isValid: boolean;
-  $hasError: boolean;
-}>`
-  font-size: 1.4rem;
-  color: ${({ $isValid, $hasError }) =>
-    $hasError ? "red" : $isValid ? "green" : "#021526"};
 `;
 
 const CheckIcon = styled.img`
@@ -265,24 +240,6 @@ const StyledButtonWrapper = styled.div`
   align-items: center;
   gap: 1.5rem;
   margin-top: 6.1rem;
-`;
-
-const CancelButton = styled.button`
-  all: unset;
-  font-size: 1.6rem;
-  font-weight: 500;
-  text-align: center;
-  color: #f93b1d;
-  border: solid 1px #f93b1d;
-  padding: 1.4rem 1.6rem;
-  border-radius: 10px;
-  background-color: #fff;
-`;
-
-const SubmitButton = styled(CancelButton)`
-  background-color: #f93b1d;
-  border: none;
-  color: #fff;
 `;
 
 export default AddAgent;

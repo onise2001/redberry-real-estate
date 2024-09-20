@@ -1,12 +1,14 @@
 import React, { useEffect, useState, useRef } from "react";
 import { useNavigate } from "react-router-dom";
 import styled from "styled-components";
+import { NoInfoSpan } from "../my-styled-components/GlobalStyles";
 
 interface ISliderProps {
   currentRegionId: number;
+  currentItemId: number;
 }
 
-const Slider: React.FC<ISliderProps> = ({ currentRegionId }) => {
+const Slider: React.FC<ISliderProps> = ({ currentRegionId, currentItemId }) => {
   const cardRef = useRef<HTMLDivElement | null>(null);
   const navigate = useNavigate();
   const [similarListings, setSimilarListings] = useState<Listing[]>([]);
@@ -14,7 +16,7 @@ const Slider: React.FC<ISliderProps> = ({ currentRegionId }) => {
   const [cardWidth, setCardWidth] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
-  const visibleSlides = 3; // Number of visible slides
+  const visibleSlides = 3;
 
   useEffect(() => {
     const fetchListings = async () => {
@@ -30,13 +32,18 @@ const Slider: React.FC<ISliderProps> = ({ currentRegionId }) => {
 
       if (response.status === 200) {
         const data = await response.json();
-        // Add duplicated items at start and end to create infinite loop
         const listingsWithDuplicates = [
-          data[data.length - 1], // Duplicate last item at the start
+          data[data.length - 1],
           ...data,
-          data[0], // Duplicate first item at the end
+          data[0],
         ];
-        setSimilarListings(listingsWithDuplicates);
+        setSimilarListings(
+          listingsWithDuplicates.filter(
+            (item) =>
+              item.city.region_id === currentRegionId &&
+              item.id !== currentItemId
+          )
+        );
       }
     };
 
@@ -60,7 +67,6 @@ const Slider: React.FC<ISliderProps> = ({ currentRegionId }) => {
     setTransformNumber((prev) => prev - cardWidth);
   };
 
-  // Handle the infinite scrolling effect
   useEffect(() => {
     if (!isTransitioning) return;
 
@@ -69,15 +75,13 @@ const Slider: React.FC<ISliderProps> = ({ currentRegionId }) => {
       (similarListings.length - visibleSlides) * cardWidth
     ) {
       setTimeout(() => {
-        // Jump back to the original first slide without animation
         setIsTransitioning(false);
         setTransformNumber(cardWidth);
-      }, 300); // Match the CSS transition duration
+      }, 300);
     }
 
     if (transformNumber <= 0) {
       setTimeout(() => {
-        // Jump to the original last slide without animation
         setIsTransitioning(false);
         setTransformNumber(
           (similarListings.length - visibleSlides - 1) * cardWidth
@@ -90,52 +94,56 @@ const Slider: React.FC<ISliderProps> = ({ currentRegionId }) => {
     <SliderSection>
       <SliderTitle>ბინები მსგავს ლოკაციაზე</SliderTitle>
       <SliderContainer>
-        <LeftArrow src="/images/arrow-left.png" onClick={slideLeft} />
-        <StyledSliderContainer>
-          <SliderWrapper
-            $slideAmount={transformNumber}
-            $isTransitioning={isTransitioning}
-          >
-            {similarListings
-              .filter((item) => item.city.region_id === currentRegionId)
-              .map((listing, index) => (
-                <Card
-                  ref={index === 1 ? cardRef : null}
-                  key={listing.id}
-                  onClick={() => navigate(`/listing/${listing.id}`)}
-                >
-                  <DealType>
-                    {listing.is_rental === 0 ? "იყიდება" : "ქირავდება"}
-                  </DealType>
-                  <CardImg src={listing.image} />
-                  <CardBody>
-                    <Price>{listing.price} ₾</Price>
-                    <Address>
-                      <img src="/images/location.png" alt="location" />
-                      {`${listing.city.name}, ${listing.address}`}
-                    </Address>
-                    <IconsContainer>
-                      <SingleIconContainer>
-                        <img src="/images/bed.png" alt="bedrooms" />
-                        <IconText>{listing.bedrooms}</IconText>
-                      </SingleIconContainer>
-                      <SingleIconContainer>
-                        <img src="/images/area.png" alt="area" />
-                        <IconText>
-                          {listing.area} მ<sup>2</sup>
-                        </IconText>
-                      </SingleIconContainer>
-                      <SingleIconContainer>
-                        <img src="/images/stake.png" alt="zipcode" />
-                        <IconText>{listing.zip_code}</IconText>
-                      </SingleIconContainer>
-                    </IconsContainer>
-                  </CardBody>
-                </Card>
-              ))}
-          </SliderWrapper>
-        </StyledSliderContainer>
-        <RightArrow src="/images/arrow-right.png" onClick={slideRight} />
+        {similarListings.length > 0 ? (
+          <>
+            <LeftArrow src="/images/arrow-left.png" onClick={slideLeft} />
+            <StyledSliderContainer>
+              <SliderWrapper
+                $slideAmount={transformNumber}
+                $isTransitioning={isTransitioning}
+              >
+                {similarListings.map((listing, index) => (
+                  <Card
+                    ref={index === 1 ? cardRef : null}
+                    key={listing.id}
+                    onClick={() => navigate(`/listing/${listing.id}`)}
+                  >
+                    <DealType>
+                      {listing.is_rental === 0 ? "იყიდება" : "ქირავდება"}
+                    </DealType>
+                    <CardImg src={listing.image} />
+                    <CardBody>
+                      <Price>{listing.price} ₾</Price>
+                      <Address>
+                        <img src="/images/location.png" alt="location" />
+                        {`${listing.city.name}, ${listing.address}`}
+                      </Address>
+                      <IconsContainer>
+                        <SingleIconContainer>
+                          <img src="/images/bed.png" alt="bedrooms" />
+                          <IconText>{listing.bedrooms}</IconText>
+                        </SingleIconContainer>
+                        <SingleIconContainer>
+                          <img src="/images/area.png" alt="area" />
+                          <IconText>
+                            {listing.area} მ<sup>2</sup>
+                          </IconText>
+                        </SingleIconContainer>
+                        <SingleIconContainer>
+                          <img src="/images/stake.png" alt="zipcode" />
+                          <IconText>{listing.zip_code}</IconText>
+                        </SingleIconContainer>
+                      </IconsContainer>
+                    </CardBody>
+                  </Card>
+                ))}
+              </SliderWrapper>
+            </StyledSliderContainer>
+            <RightArrow src="/images/arrow-right.png" onClick={slideRight} />{" "}
+          </>
+        ) : (
+          <NoInfoSpan>აღნიშნული მონაცემებით განცხადება არ იძებნება</NoInfoSpan>
+        )}
       </SliderContainer>
     </SliderSection>
   );
@@ -148,12 +156,14 @@ const SliderSection = styled.section`
   margin-top: 15.9rem;
   max-width: 100%;
   position: relative;
+  padding-bottom: 5rem;
 `;
 
 const SliderTitle = styled.h2`
   font-size: 3.2rem;
   font-weight: 500;
   color: #021526;
+  text-align: center;
 `;
 
 const SliderContainer = styled.div`

@@ -146,7 +146,10 @@ export default function SingleListing() {
         </DeleteContainer>
       </StyledPopUpSection>
       {/* <CreatedAt>{`გამოქვეყნების თარიღი ${listing?.created_at}`}</CreatedAt> */}
-      <Slider currentRegionId={listing?.city.region_id} />
+      <Slider
+        currentRegionId={listing?.city.region_id}
+        currentItemId={listing?.id}
+      />
     </StyledSection>
   );
 }

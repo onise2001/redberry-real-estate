@@ -7,6 +7,15 @@ import { components, DropdownIndicatorProps } from "react-select";
 import { useForm, SubmitHandler, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
+import {
+  StyledInput,
+  StyledLabel,
+  ValidationMessage,
+  SingleInputWrapper,
+  Title,
+  StyledForm,
+  FormContainer,
+} from "../my-styled-components/GlobalStyles";
 
 type ListingInputs = {
   address: string;
@@ -36,15 +45,19 @@ const AddListing: React.FC = () => {
     );
   };
 
-  const dropDownStyles = {
+  const dropDownStyles = (hasError: boolean) => ({
     control: (baseStyles, state) => ({
       ...baseStyles,
       fontFamily: "FiraGO",
       cursor: "pointer",
       width: "38.4rem",
-      border: "solid 1px #808a93",
+      border: `solid 1px ${hasError ? "red" : "#808a93"}`,
       borderRadius: "6px",
-      borderColor: state.selectProps.menuIsOpen ? "#808a93" : "#808a93",
+      borderColor: state.selectProps.menuIsOpen
+        ? "#808a93"
+        : hasError
+        ? "red"
+        : "#808a93",
       borderBottom: state.selectProps.menuIsOpen ? "none" : baseStyles.border,
       borderBottomLeftRadius: state.isFocused ? "0" : "6px",
       borderBottomRightRadius: state.isFocused ? "0" : "6px",
@@ -93,7 +106,7 @@ const AddListing: React.FC = () => {
       backgroundColor: isSelected ? "rgba(128,138,147,0.4)" : "#fff",
       "&:hover": { backgroundColor: "rgba(128,138,147,0.3)" },
     }),
-  };
+  });
 
   const schema = yup.object({
     is_rental: yup.string().matches(/^\d+$/, "error").required(),
@@ -247,7 +260,12 @@ const AddListing: React.FC = () => {
           <Row>
             <SingleInputWrapper>
               <StyledLabel htmlFor="address">მისამართი*</StyledLabel>
-              <StyledInput type="text" id="address" {...register("address")} />
+              <StyledInput
+                type="text"
+                id="address"
+                $hasError={Boolean(errors.address)}
+                {...register("address")}
+              />
               <ValidationMessage
                 $hasError={Boolean(errors.address)}
                 $isValid={Boolean(watch("address") && !errors.address)}
@@ -261,6 +279,7 @@ const AddListing: React.FC = () => {
               <StyledInput
                 type="text"
                 id="zip_code"
+                $hasError={Boolean(errors.zip_code)}
                 {...register("zip_code")}
               />
               <ValidationMessage
@@ -278,7 +297,6 @@ const AddListing: React.FC = () => {
               <Controller
                 name="region_id"
                 control={control}
-                defaultValue={0}
                 render={({ field }) => (
                   <Select<SelectOption>
                     {...field}
@@ -291,10 +309,11 @@ const AddListing: React.FC = () => {
                       (region) => region.value === field.value
                     )}
                     components={{ DropdownIndicator: CustomArrow }}
-                    styles={dropDownStyles}
+                    styles={dropDownStyles(Boolean(errors.region_id))}
                     onChange={(option) =>
                       field.onChange(option ? option.value : null)
                     }
+
                     //menuIsOpen={true}
                   />
                 )}
@@ -326,7 +345,7 @@ const AddListing: React.FC = () => {
                         ?.id,
                     }}
                     components={{ DropdownIndicator: CustomArrow }}
-                    styles={dropDownStyles}
+                    styles={dropDownStyles(Boolean(errors.city_id))}
                     onChange={(option) =>
                       field.onChange(option ? option?.value : null)
                     }
@@ -344,7 +363,12 @@ const AddListing: React.FC = () => {
           <Row>
             <SingleInputWrapper>
               <StyledLabel htmlFor="price">ფასი</StyledLabel>
-              <StyledInput type="text" id="price" {...register("price")} />
+              <StyledInput
+                type="text"
+                id="price"
+                $hasError={Boolean(errors.price)}
+                {...register("price")}
+              />
               <ValidationMessage
                 $hasError={Boolean(errors.price)}
                 $isValid={Boolean(watch("price") && !errors.price)}
@@ -355,7 +379,12 @@ const AddListing: React.FC = () => {
             </SingleInputWrapper>
             <SingleInputWrapper>
               <StyledLabel htmlFor="area">ფართობი</StyledLabel>
-              <StyledInput type="text" id="area" {...register("area")} />
+              <StyledInput
+                type="text"
+                id="area"
+                $hasError={Boolean(errors.area)}
+                {...register("area")}
+              />
               <ValidationMessage
                 $hasError={Boolean(errors.area)}
                 $isValid={Boolean(watch("area") && !errors.area)}
@@ -373,6 +402,7 @@ const AddListing: React.FC = () => {
               <StyledInput
                 type="text"
                 id="bedrooms"
+                $hasError={Boolean(errors.bedrooms)}
                 {...register("bedrooms")}
               />
               <ValidationMessage
@@ -388,7 +418,10 @@ const AddListing: React.FC = () => {
 
         <SingleInputWrapper>
           <StyledLabel>აღწერა*</StyledLabel>
-          <StyledTextArea {...register("description")} />
+          <StyledTextArea
+            $hasError={Boolean(errors.description)}
+            {...register("description")}
+          />
         </SingleInputWrapper>
 
         <SingleInputWrapper>
@@ -401,6 +434,7 @@ const AddListing: React.FC = () => {
                 onDrop={(acceptedFile) => {
                   field.onChange(acceptedFile);
                 }}
+                $hasError={Boolean(errors.image)}
               />
             )}
           />
@@ -416,16 +450,15 @@ const AddListing: React.FC = () => {
               <Select<SelectOption>
                 {...field}
                 placeholder="აირჩიე"
-                defaultValue={0}
                 options={agents?.map((item) => {
                   return {
                     value: item.value,
                     label: item.label,
                   };
                 })}
-                value={agents.find((item) => item.id === field.value)}
+                value={agents.find((item) => item.value === field.value)}
                 components={{ DropdownIndicator: CustomArrow }}
-                styles={dropDownStyles}
+                styles={dropDownStyles(Boolean(errors.agent_id))}
                 onChange={(option) => field.onChange(option?.value)}
                 //menuIsOpen={true}
               />
@@ -449,28 +482,6 @@ const AddListing: React.FC = () => {
   );
 };
 
-const FormContainer = styled.div`
-  margin: auto;
-  padding: 8.7rem 10.5rem;
-  background-color: #fff;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: 6rem;
-`;
-
-const Title = styled.h2`
-  font-size: 3.2rem;
-  font-weight: 500;
-  color: #021526;
-`;
-
-const StyledForm = styled.form`
-  display: flex;
-  flex-direction: column;
-  gap: 2.8rem;
-`;
-
 const RowContainer = styled.div`
   display: flex;
   flex-direction: column;
@@ -488,7 +499,8 @@ const Row = styled.div`
 
 const RowTitle = styled.h2`
   font-size: 1.6rem;
-  font-weight: 500l;
+  font-family: "HelveticaNeue", sans-serif;
+  font-weight: 500;
   color: #1a1a1f;
 `;
 
@@ -503,36 +515,12 @@ const RadioButtonContainer = styled.div`
   gap: 8.4rem;
 `;
 
-const SingleInputWrapper = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: 0.5rem;
-  width: 100%;
-`;
-
 const SingleInputWrapperForRadion = styled(SingleInputWrapper)`
   flex-direction: row-reverse;
   width: fit-content;
 `;
 
-const StyledLabel = styled.label`
-  font-size: 1.4rem;
-  font-weight: 500;
-  color: #021526;
-`;
-
-const StyledInput = styled.input`
-  outline: none;
-  width: 38.4rem;
-  font-size: 1.4rem;
-  color: #021526;
-  padding: 1.15rem;
-  border-radius: 6px;
-  border: solid 1px #808a93;
-`;
-
-const StyledTextArea = styled.textarea`
+const StyledTextArea = styled.textarea<{ $hasError: boolean }>`
   width: 100%;
   height: 13.5rem;
   outline: none;
@@ -540,43 +528,14 @@ const StyledTextArea = styled.textarea`
   color: #021526;
   padding: 1.25rem 1rem;
   border-radius: 6px;
-  border: solid 1px #808a93;
+  border: solid 1px ${({ $hasError }) => ($hasError ? "red" : "#808a93")};
   resize: none;
 `;
 
 const StyledRadioButton = styled.input``;
 
-const ValidationMessage = styled.span<{
-  $isValid: boolean;
-  $hasError: boolean;
-}>`
-  font-size: 1.4rem;
-  color: ${({ $isValid, $hasError }) =>
-    $hasError ? "red" : $isValid ? "green" : "#021526"};
-`;
-
 const CheckIcon = styled.img`
   margin-right: 0.7rem;
-`;
-
-const StyledDropDown = styled.select`
-  outline: none;
-  cursor: pointer;
-  width: 38.4rem;
-  padding: 1rem;
-  border-radius: 6px;
-  border: solid 1px #808a93;
-  font-size: 1.4rem;
-  color: #021526;
-`;
-
-const StyledOption = styled.option`
-  font-size: 1.4rem;
-  color: #021526;
-  display: flex;
-  align-items: center;
-  padding: 1rem;
-  border-bottom: solid 1px #808a93;
 `;
 
 const StyledButtonWrapper = styled.div`
