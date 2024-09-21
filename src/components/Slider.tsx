@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { useNavigate } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import styled from "styled-components";
 import {
   Address,
@@ -27,7 +27,7 @@ const Slider: React.FC<ISliderProps> = ({ currentRegionId, currentItemId }) => {
   const [cardWidth, setCardWidth] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
 
-  const visibleSlides = 3;
+  const visibleSlides = 4;
 
   useEffect(() => {
     const fetchListings = async () => {
@@ -43,14 +43,9 @@ const Slider: React.FC<ISliderProps> = ({ currentRegionId, currentItemId }) => {
 
       if (response.status === 200) {
         const data = await response.json();
-        const listingsWithDuplicates = [
-          data[data.length - 1],
-          ...data,
-          data[0],
-        ];
 
         setSimilarListings(
-          listingsWithDuplicates.filter((item) => {
+          data.filter((item: Listing) => {
             return (
               item.city.region_id === currentRegionId &&
               item.id !== currentItemId
@@ -62,65 +57,78 @@ const Slider: React.FC<ISliderProps> = ({ currentRegionId, currentItemId }) => {
     if (currentRegionId !== 0) {
       fetchListings();
     }
-  }, []);
+  }, [currentRegionId, currentItemId]);
 
   useEffect(() => {
     if (cardRef.current) {
-      const width = cardRef.current.getBoundingClientRect().width + 20;
+      const width = cardRef.current.getBoundingClientRect().width + 20; // Add gap between cards
       setCardWidth(width);
     }
   }, [similarListings]);
 
   const slideRight = () => {
-    setIsTransitioning(true);
-    setTransformNumber((prev) => prev + cardWidth);
+    const maxSlide = (similarListings.length - visibleSlides) * cardWidth;
+
+    if (transformNumber < maxSlide) {
+      setIsTransitioning(true);
+      setTransformNumber((prev) => Math.min(prev + cardWidth, maxSlide));
+    } else {
+      setTimeout(() => {
+        setIsTransitioning(false);
+        setTransformNumber(0);
+      }, 500);
+    }
   };
 
   const slideLeft = () => {
-    setIsTransitioning(true);
-    setTransformNumber((prev) => prev - cardWidth);
+    if (transformNumber > 0) {
+      setIsTransitioning(true);
+      setTransformNumber((prev) => Math.max(prev - cardWidth, 0));
+    } else {
+      setTimeout(() => {
+        setIsTransitioning(false);
+        setTransformNumber(
+          (similarListings.length - visibleSlides) * cardWidth
+        );
+      }, 500);
+    }
   };
 
   useEffect(() => {
     if (!isTransitioning) return;
 
-    if (
-      transformNumber >=
-      (similarListings.length - visibleSlides) * cardWidth
-    ) {
-      setTimeout(() => {
-        setIsTransitioning(false);
-        setTransformNumber(cardWidth);
-      }, 300);
-    }
+    const resetTransition = () => {
+      setIsTransitioning(false);
+    };
 
-    if (transformNumber <= 0) {
-      setTimeout(() => {
-        setIsTransitioning(false);
-        setTransformNumber(
-          (similarListings.length - visibleSlides - 1) * cardWidth
-        );
-      }, 300);
-    }
-  }, [transformNumber, cardWidth, similarListings.length, isTransitioning]);
+    const timer = setTimeout(resetTransition, 500);
+
+    return () => {
+      clearTimeout(timer);
+    };
+  }, [isTransitioning]);
 
   return (
     <SliderSection>
       <SliderTitle>ბინები მსგავს ლოკაციაზე</SliderTitle>
-      <SliderContainer>
-        {similarListings.length > 0 ? (
-          <>
-            <LeftArrow src="/images/arrow-left.png" onClick={slideLeft} />
-            <StyledSliderContainer>
-              <SliderWrapper
-                $slideAmount={transformNumber}
-                $isTransitioning={isTransitioning}
-              >
-                {similarListings.map((listing, index) => (
-                  <Card
-                    ref={index === 1 ? cardRef : null}
-                    key={listing.id}
-                    onClick={() => navigate(`/listing/${listing.id}`)}
+
+      {similarListings.length > 0 ? (
+        <SliderContainer>
+          <LeftArrow src="/images/arrow-left.png" onClick={slideLeft} />
+          <StyledSliderContainer>
+            <SliderWrapper
+              $slideAmount={transformNumber}
+              $isTransitioning={isTransitioning}
+            >
+              {similarListings.map((listing, index) => (
+                <Card
+                  ref={index === 0 ? cardRef : null}
+                  key={listing.id}
+                  onClick={() => navigate(`/listing/${listing.id}`)}
+                >
+                  <Link
+                    style={{ textDecoration: "none" }}
+                    to={`/listing/${listing.id}`}
                   >
                     <DealType>
                       {listing.is_rental === 0 ? "იყიდება" : "ქირავდება"}
@@ -149,16 +157,18 @@ const Slider: React.FC<ISliderProps> = ({ currentRegionId, currentItemId }) => {
                         </SingleIconContainer>
                       </IconsContainer>
                     </CardBody>
-                  </Card>
-                ))}
-              </SliderWrapper>
-            </StyledSliderContainer>
-            <RightArrow src="/images/arrow-right.png" onClick={slideRight} />{" "}
-          </>
-        ) : (
-          <NoInfoSpan>აღნიშნული მონაცემებით განცხადება არ იძებნება</NoInfoSpan>
-        )}
-      </SliderContainer>
+                  </Link>
+                </Card>
+              ))}
+            </SliderWrapper>
+          </StyledSliderContainer>
+          <RightArrow src="/images/arrow-right.png" onClick={slideRight} />
+        </SliderContainer>
+      ) : (
+        <SliderNoInfoSpan>
+          აღნიშნული მონაცემებით განცხადება არ იძებნება
+        </SliderNoInfoSpan>
+      )}
     </SliderSection>
   );
 };
@@ -170,7 +180,6 @@ const SliderSection = styled.section`
   margin-top: 15.9rem;
   width: 100%;
   position: relative;
-  padding-bottom: 5rem;
 `;
 
 const SliderTitle = styled.h2`
@@ -202,7 +211,9 @@ const SliderWrapper = styled.div<{
   gap: 2rem;
   transform: ${({ $slideAmount }) => `translateX(-${$slideAmount}px)`};
   transition: ${({ $isTransitioning }) =>
-    $isTransitioning ? "transform 0.3s ease-in-out" : "none"};
+    $isTransitioning
+      ? "transform 0.5s cubic-bezier(0.25, 0.1, 0.25, 1)"
+      : "none"};
 `;
 
 const LeftArrow = styled.img`
@@ -219,6 +230,10 @@ const RightArrow = styled.img`
   right: -4rem;
   transform: translateY(-50%);
   cursor: pointer;
+`;
+
+const SliderNoInfoSpan = styled(NoInfoSpan)`
+  align-self: center;
 `;
 
 export default Slider;

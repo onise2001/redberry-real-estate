@@ -98,7 +98,6 @@ const AllListing: React.FC = () => {
 
   const [isHovering, setIsHovering] = useState<boolean>(false);
 
-  console.log(allFilters);
   return (
     <StyledSection>
       <AddAgent active={active} setActive={setActive} />

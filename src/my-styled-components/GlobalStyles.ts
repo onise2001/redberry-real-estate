@@ -193,6 +193,4 @@ export const DealType = styled.p`
   left: 2.3rem;
 `;
 
-
-
 export default GlobalStyles;

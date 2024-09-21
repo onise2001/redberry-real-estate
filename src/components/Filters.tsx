@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import styled from "styled-components";
 import { useMask } from "@react-input/mask";
 import { useForm, SubmitHandler } from "react-hook-form";
@@ -113,8 +113,33 @@ const Filters: React.FC<IFiltersProps> = ({ allFilters, setAllFilters }) => {
     priceRange.setValue("max", allFilters.price.max);
     setBedroomsNum(allFilters.bedrooms);
   }, [allFilters]);
-  console.log(allFilters);
-  console.log(filterRegions);
+
+  const regionsRef = useRef<HTMLDivElement | null>(null);
+  const pricePopupRef = useRef<HTMLFormElement | null>(null);
+  const areaPopupRef = useRef<HTMLFormElement | null>(null);
+  const bedroomPopRef = useRef<HTMLDivElement | null>(null);
+
+  const handleClickOutside = (event: MouseEvent) => {
+    if (
+      regionsRef.current &&
+      !regionsRef.current.contains(event.target as Node) &&
+      pricePopupRef.current &&
+      !pricePopupRef.current.contains(event.target as Node) &&
+      areaPopupRef.current &&
+      !areaPopupRef.current.contains(event.target as Node) &&
+      bedroomPopRef.current &&
+      !bedroomPopRef.current.contains(event.target as Node)
+    ) {
+      setFilterToShow(""); // Close all popups
+    }
+  };
+
+  useEffect(() => {
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside);
+    };
+  }, []);
 
   return (
     <StyledFiltersWrapper>
@@ -132,6 +157,7 @@ const Filters: React.FC<IFiltersProps> = ({ allFilters, setAllFilters }) => {
         <RegionsPopup
           $active={filterToShow == filters[0]}
           onClick={(event) => event.stopPropagation()}
+          ref={regionsRef}
         >
           <FilterTitle>რეგიონის მიხედვით</FilterTitle>
           <RegionsContainer>
@@ -154,9 +180,6 @@ const Filters: React.FC<IFiltersProps> = ({ allFilters, setAllFilters }) => {
                         );
                       }
                     }}
-                    defaultChecked={allFilters.region.some(
-                      (region) => region.id === item.id
-                    )}
                     checked={filterRegions.some(
                       (region) => region.id === item.id
                     )}
@@ -193,6 +216,7 @@ const Filters: React.FC<IFiltersProps> = ({ allFilters, setAllFilters }) => {
           src="/images/arrow.png"
         />
         <PriceAndAreaPopup
+          ref={pricePopupRef}
           $active={filterToShow === filters[1]}
           onSubmit={priceRange.handleSubmit(priceSubmit)}
           onClick={(event) => event.stopPropagation()}
@@ -256,6 +280,7 @@ const Filters: React.FC<IFiltersProps> = ({ allFilters, setAllFilters }) => {
           src="/images/arrow.png"
         />
         <PriceAndAreaPopup
+          ref={areaPopupRef}
           $active={filterToShow === filters[2]}
           onSubmit={areaRange.handleSubmit(areaSubmit)}
         >
@@ -328,7 +353,7 @@ const Filters: React.FC<IFiltersProps> = ({ allFilters, setAllFilters }) => {
           $dropped={filterToShow == filters[3]}
           src="/images/arrow.png"
         />
-        <BedroomPopup $active={filterToShow === filters[3]}>
+        <BedroomPopup ref={bedroomPopRef} $active={filterToShow === filters[3]}>
           <FilterTitle>საძინებლების რაოდენობა</FilterTitle>
           <BedroomInput
             placeholder="0"
@@ -483,7 +508,7 @@ const StyledInput = styled.input`
   border: solid 1px #808a93;
 `;
 
-const InputWrapper = styled.form`
+const InputWrapper = styled.div`
   display: flex;
   align-items: center;
   gap: 1.5rem;

@@ -67,6 +67,8 @@ export default function SingleListing() {
 
     if (response.status === 200) {
       navigate("/");
+    } else {
+      alert("Something went wrong while deleting this listing");
     }
   };
 
@@ -74,7 +76,12 @@ export default function SingleListing() {
     <StyledSection>
       <ListingWrapper>
         <ImageWrapper>
-          <BackImage src="/images/arrow-left.png" />
+          <BackImage
+            src="/images/arrow-left.png"
+            onClick={() => {
+              navigate("/");
+            }}
+          />
           <ListingImage src={listing?.image} />
           <CreatedAt>{`გამოქვეყნების თარიღი ${listing?.created_at}`}</CreatedAt>
         </ImageWrapper>
@@ -196,6 +203,7 @@ const BackImage = styled.img`
   width: 2.5rem;
   height: 2.5rem;
   margin-bottom: 2.4rem;
+  cursor: pointer;
 `;
 
 const ListingImage = styled.img`

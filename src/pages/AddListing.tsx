@@ -43,7 +43,7 @@ type ListingInputs = {
 
 const AddListing: React.FC = () => {
   const navigate = useNavigate();
-  const { active, setActive, fetchRegions, agents, setAgents } =
+  const { active, setActive, fetchRegions, agents, setAgents, newAgentId } =
     useRealEstateContext();
   const [regions, setRegions] = useState<SelectOption[]>([]);
   const [cities, setCitites] = useState<City[]>([]);
@@ -141,15 +141,19 @@ const AddListing: React.FC = () => {
     agent_id: yup.string().matches(/^\d+$/, "error").required(),
   });
 
+  const savedFormData = JSON.parse(localStorage.getItem("formData") || "{}");
+
   const {
     register,
     watch,
     control,
     handleSubmit,
+    setValue,
     formState: { errors },
   } = useForm<ListingInputs>({
     resolver: yupResolver(schema),
     mode: "all",
+    defaultValues: savedFormData,
   });
 
   const agent_id = watch("agent_id");
@@ -169,11 +173,13 @@ const AddListing: React.FC = () => {
     );
     if (response.status === 201) {
       const data = await response.json();
+      localStorage.removeItem("formData");
       navigate(`/listing/${data.id}`);
     }
   };
 
   const submit: SubmitHandler<ListingInputs> = (data) => {
+    localStorage.removeItem("formData");
     const formData = new FormData();
     Object.entries(data).forEach(([key, value]) => {
       formData.append(key, value);
@@ -181,6 +187,12 @@ const AddListing: React.FC = () => {
 
     addListing(formData);
   };
+
+  const formValues = watch();
+
+  useEffect(() => {
+    localStorage.setItem("formData", JSON.stringify(formValues));
+  }, [formValues]);
 
   useEffect(() => {
     const fetchAgents = async () => {
@@ -231,7 +243,20 @@ const AddListing: React.FC = () => {
       }
     };
     fetchCities();
+
+    // const savedForm = localStorage.getItem("formData");
+    // if (savedForm) {
+    //   console.log(savedForm);
+    //   const currentForm = JSON.parse(savedForm);
+    //   Object.entries(currentForm).forEach(([key, value]) => {
+    //     setValue(key, value);
+    //   });
+    // }
   }, []);
+
+  useEffect(() => {
+    setValue("agent_id", newAgentId.toString());
+  }, [newAgentId]);
 
   return (
     <FormContainer>
@@ -508,11 +533,10 @@ const AddListing: React.FC = () => {
                       <span>{option.label}</span>
                     </div>
                   ) : (
-                    option.label // default rendering for other options
+                    option.label
                   )
                 }
                 value={agents.find((item) => item.value === parseInt(agent_id))}
-                //menuIsOpen={true}
               />
             )}
           />
@@ -522,6 +546,7 @@ const AddListing: React.FC = () => {
           <WhiteButton
             type="button"
             onClick={() => {
+              localStorage.removeItem("formData");
               navigate("/");
             }}
           >

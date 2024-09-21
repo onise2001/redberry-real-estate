@@ -6,6 +6,8 @@ interface IRealEstateContext {
   fetchRegions: () => Promise<Region[]>;
   agents: SelectOption[];
   setAgents: React.Dispatch<React.SetStateAction<SelectOption[]>>;
+  newAgentId: number;
+  setNewAgentId: React.Dispatch<React.SetStateAction<number>>;
 }
 const RealEsateContex = createContext<IRealEstateContext>({
   active: false,
@@ -13,6 +15,8 @@ const RealEsateContex = createContext<IRealEstateContext>({
   fetchRegions: async () => [] as Region[],
   agents: [],
   setAgents: () => [],
+  newAgentId: 0,
+  setNewAgentId: () => {},
 });
 export default function RealEstateContextProvider({
   children,
@@ -39,9 +43,19 @@ export default function RealEstateContextProvider({
     },
   ]);
 
+  const [newAgentId, setNewAgentId] = useState<number>(0);
+
   return (
     <RealEsateContex.Provider
-      value={{ active, setActive, fetchRegions, agents, setAgents }}
+      value={{
+        active,
+        setActive,
+        fetchRegions,
+        agents,
+        setAgents,
+        newAgentId,
+        setNewAgentId,
+      }}
     >
       {children}
     </RealEsateContex.Provider>

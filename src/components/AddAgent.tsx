@@ -34,7 +34,7 @@ type AgentInputs = {
 };
 
 const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
-  const { setAgents } = useRealEstateContext();
+  const { setAgents, setNewAgentId } = useRealEstateContext();
   const schema = yup.object({
     name: yup.string().min(2, "error").required(),
     surname: yup.string().min(2).required(),
@@ -87,12 +87,14 @@ const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
     );
     if (response.status === 201) {
       const data = await response.json();
+
+      handleReset();
       setAgents((prev) => [
         ...prev,
         { value: data.id, label: `${data.name} ${data.surname}` },
       ]);
-      reset();
       setActive(false);
+      setNewAgentId(data.id);
     } else {
       throw alert("Something Went wrong");
     }
@@ -197,7 +199,7 @@ const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
                 $isValid={Boolean(watch("phone") && !errors.phone)}
               >
                 <CheckIcon src="/images/check.png" />
-                მხოლოდ რიცხვები
+                მხოლოდ რიცხვები (5XXXXXXXX)
               </ValidationMessage>
             </SingleInputWrapper>
           </Row>
