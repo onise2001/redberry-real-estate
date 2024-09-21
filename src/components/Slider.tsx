@@ -60,7 +60,7 @@ const Slider: React.FC<ISliderProps> = ({ currentRegionId, currentItemId }) => {
 
   useEffect(() => {
     if (cardRef.current) {
-      const width = cardRef.current.getBoundingClientRect().width + 20; // Add gap between cards
+      const width = cardRef.current.getBoundingClientRect().width + 20;
       setCardWidth(width);
     }
   }, [similarListings]);
@@ -208,7 +208,7 @@ const SliderWrapper = styled.div<{
   transform: ${({ $slideAmount }) => `translateX(-${$slideAmount}px)`};
   transition: ${({ $isTransitioning }) =>
     $isTransitioning
-      ? "transform 0.5s cubic-bezier(0.25, 0.1, 0.25, 1)"
+      ? "transform 0.3s cubic-bezier(0.25, 0.1, 0.25, 1)"
       : "none"};
 `;
 

@@ -23,6 +23,7 @@ import { useRealEstateContext } from "../contexts/RealEstateContext";
 interface IAddAgentProps {
   active: boolean;
   setActive: React.Dispatch<React.SetStateAction<boolean>>;
+  setId: boolean;
 }
 
 type AgentInputs = {
@@ -33,7 +34,7 @@ type AgentInputs = {
   avatar: File;
 };
 
-const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
+const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive, setId }) => {
   const { setAgents, setNewAgentId } = useRealEstateContext();
   const schema = yup.object({
     name: yup.string().min(2, "error").required(),
@@ -94,7 +95,9 @@ const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
         { value: data.id, label: `${data.name} ${data.surname}` },
       ]);
       setActive(false);
-      setNewAgentId(data.id);
+      if (setId) {
+        setNewAgentId(data.id);
+      }
     } else {
       throw alert("Something Went wrong");
     }

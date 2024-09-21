@@ -100,7 +100,7 @@ const AllListing: React.FC = () => {
 
   return (
     <StyledSection>
-      <AddAgent active={active} setActive={setActive} />
+      <AddAgent active={active} setActive={setActive} setId={false} />
       <StyledContainer>
         <Filters setAllFilters={setAllFilters} allFilters={allFilters} />
         <ButtonsContainer>

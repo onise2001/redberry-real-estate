@@ -243,19 +243,12 @@ const AddListing: React.FC = () => {
       }
     };
     fetchCities();
-
-    // const savedForm = localStorage.getItem("formData");
-    // if (savedForm) {
-    //   console.log(savedForm);
-    //   const currentForm = JSON.parse(savedForm);
-    //   Object.entries(currentForm).forEach(([key, value]) => {
-    //     setValue(key, value);
-    //   });
-    // }
   }, []);
 
   useEffect(() => {
-    setValue("agent_id", newAgentId.toString());
+    if (newAgentId !== 0) {
+      setValue("agent_id", newAgentId.toString());
+    }
   }, [newAgentId]);
 
   return (
@@ -555,7 +548,7 @@ const AddListing: React.FC = () => {
           <OrangeButton type="submit">დაამატე ლისტინგი</OrangeButton>
         </StyledButtonWrapper>
       </StyledForm>
-      <AddAgent active={active} setActive={setActive} />
+      <AddAgent active={active} setActive={setActive} setId={true} />
     </FormContainer>
   );
 };
