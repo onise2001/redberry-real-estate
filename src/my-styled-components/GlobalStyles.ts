@@ -128,4 +128,71 @@ export const FormContainer = styled.div`
   gap: 6rem;
 `;
 
+export const Card = styled.div`
+  min-width: 38.4rem;
+  box-shadow: 5px 5px 12px 0 rgba(2, 21, 38, 0.08);
+  border-radius: 15px;
+  position: relative;
+  cursor: pointer;
+`;
+
+export const CardImg = styled.img`
+  width: 100%;
+`;
+
+export const CardBody = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  justify-content: center;
+  gap: 1rem;
+  padding: 2.2rem 2.5rem;
+`;
+
+export const Price = styled.h2`
+  font-size: 2.8rem;
+  font-weight: bold;
+  color: #021526;
+`;
+
+export const Address = styled.span`
+  font-size: 1.6rem;
+  color: rgba(2, 21, 38, 0.7);
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  margin-bottom: 1rem;
+`;
+
+export const IconsContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 3.2rem;
+`;
+
+export const SingleIconContainer = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 0.55rem;
+`;
+
+export const IconText = styled.span`
+  font-size: 1.6rem;
+  color: rgba(2, 21, 38, 0.7);
+`;
+
+export const DealType = styled.p`
+  font-size: 1.2rem;
+  font-weight: 500;
+  padding: 0.8rem 1.8rem 0.6rem;
+  border-radius: 15px;
+  background-color: rgba(2, 21, 38, 0.5);
+  color: #fff;
+  position: absolute;
+  top: 2.3rem;
+  left: 2.3rem;
+`;
+
+
+
 export default GlobalStyles;
