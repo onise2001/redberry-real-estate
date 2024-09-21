@@ -1,7 +1,6 @@
-import React, { useState } from "react";
+import React, { useRef } from "react";
 import styled from "styled-components";
-import DragAndDrop from "./DragAndDrop";
-import { useNavigate } from "react-router-dom";
+import DragAndDrop, { DragAndDropRef } from "./DragAndDrop";
 import { Error } from "../my-styled-components/GlobalStyles";
 import {
   OrangeButton,
@@ -53,9 +52,8 @@ const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
       )
       .required(),
     avatar: yup
-      .mixed()
+      .mixed<File>()
       .required("Avatar is required")
-
       .test("file-size", "Image must not be more than 1Mb", (value) => {
         return value.size < 1024 * 1024;
       }),
@@ -73,7 +71,7 @@ const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
     mode: "all",
   });
 
-  const addAgent = async (formData) => {
+  const addAgent = async (formData: FormData) => {
     const key = "9cfc8fa2-e80e-42e6-91f0-3eda643de14a";
     const response = await fetch(
       "https://api.real-estate-manager.redberryinternship.ge/api/agents",
@@ -105,6 +103,15 @@ const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
 
   //console.log(errors.avatar?.message);
 
+  const avatarInputRef = useRef<DragAndDropRef>(null);
+
+  const handleReset = () => {
+    reset(); // Reset form fields
+    if (avatarInputRef.current) {
+      avatarInputRef.current.reset();
+    }
+    setActive(false);
+  };
   return (
     <StyledPopUpSection
       id="popup"
@@ -200,19 +207,14 @@ const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
                     field.onChange(acceptedFiles);
                   }}
                   $hasError={Boolean(errors.avatar)}
+                  ref={avatarInputRef}
                 />
               )}
             />
             {errors.avatar ? <Error>{errors.avatar.message}</Error> : null}
           </SingleInputWrapper>
           <StyledButtonWrapper>
-            <WhiteButton
-              type="button"
-              onClick={() => {
-                reset();
-                setActive(false);
-              }}
-            >
+            <WhiteButton type="button" onClick={handleReset}>
               გაუქმება
             </WhiteButton>
             <OrangeButton type="submit">დაამატე აგენტი</OrangeButton>

@@ -3,7 +3,13 @@ import styled from "styled-components";
 import DragAndDrop from "../components/DragAndDrop";
 import { useNavigate } from "react-router-dom";
 import Select from "react-select";
-import { components, DropdownIndicatorProps } from "react-select";
+import {
+  components,
+  DropdownIndicatorProps,
+  GroupBase,
+  StylesConfig,
+  CSSObjectWithLabel,
+} from "react-select";
 import { useForm, SubmitHandler, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
@@ -37,12 +43,14 @@ type ListingInputs = {
 
 const AddListing: React.FC = () => {
   const navigate = useNavigate();
-  const { active, setActive } = useRealEstateContext();
+  const { active, setActive, fetchRegions } = useRealEstateContext();
   const [regions, setRegions] = useState<SelectOption[]>([]);
   const [agents, setAgents] = useState<SelectOption[]>([]);
   const [cities, setCitites] = useState<City[]>([]);
 
-  const CustomArrow = (props: DropdownIndicatorProps) => {
+  const CustomArrow: React.FC<
+    DropdownIndicatorProps<SelectOption, false, GroupBase<SelectOption>>
+  > = (props) => {
     return (
       <components.DropdownIndicator {...props}>
         <img src="/images/arrow.png" />
@@ -50,8 +58,12 @@ const AddListing: React.FC = () => {
     );
   };
 
-  const dropDownStyles = (hasError: boolean) => ({
-    control: (baseStyles, state) => ({
+  const dropDownStyles: (
+    hasError: boolean
+  ) => StylesConfig<SelectOption, false, GroupBase<SelectOption>> = (
+    hasError
+  ) => ({
+    control: (baseStyles: CSSObjectWithLabel, state) => ({
       ...baseStyles,
       fontFamily: "FiraGO",
       cursor: "pointer",
@@ -76,19 +88,18 @@ const AddListing: React.FC = () => {
         display: "none",
       },
     }),
-    dropdownIndicator: (baseStyles, state) => ({
+    dropdownIndicator: (baseStyles: CSSObjectWithLabel, state) => ({
       ...baseStyles,
       cursor: "pointer",
       transform: state.selectProps.menuIsOpen ? "rotate(180deg)" : "rotate(0)",
     }),
-    menuList: (baseStyles) => ({
+    menuList: (baseStyles: CSSObjectWithLabel) => ({
       ...baseStyles,
       padding: "0",
     }),
-    menu: (baseStyles, state) => ({
+    menu: (baseStyles: CSSObjectWithLabel, state) => ({
       ...baseStyles,
       fontFamily: "inherit",
-
       border: "solid 1px #808a93",
       padding: "0",
       margin: "0",
@@ -101,9 +112,9 @@ const AddListing: React.FC = () => {
         ? "0"
         : baseStyles.borderRadius,
     }),
-    option: (baseStyles, { isSelected }) => ({
+    option: (baseStyles: CSSObjectWithLabel, { isSelected }) => ({
       ...baseStyles,
-      borderTop: "solid 1px rgb(128, 138, 147) ",
+      borderTop: "solid 1px rgb(128, 138, 147)",
       fontSize: "1.4rem",
       color: "#021526",
       padding: "1rem",
@@ -126,7 +137,7 @@ const AddListing: React.FC = () => {
       .required(),
     bedrooms: yup.string().matches(/^\d+$/, "error").required(),
     description: yup.string().required("error"),
-    image: yup.mixed().required(),
+    image: yup.mixed<File>().required(),
     agent_id: yup.string().matches(/^\d+$/, "error").required(),
   });
 
@@ -142,11 +153,9 @@ const AddListing: React.FC = () => {
   });
 
   const agent_id = watch("agent_id");
-  // console.log(agent_id);
-  // console.log(agents.find((item) => item.value === parseInt(agent_id)));
 
   const region = watch("region_id");
-  const addListing = async (formData) => {
+  const addListing = async (formData: FormData) => {
     const response = await fetch(
       "https://api.real-estate-manager.redberryinternship.ge/api/real-estates",
       {
@@ -187,7 +196,7 @@ const AddListing: React.FC = () => {
       if (response.status === 200) {
         const data = await response.json();
         setAgents(
-          data.map((item) => {
+          data.map((item: Agent) => {
             return { label: `${item.name} ${item.surname}`, value: item.id };
           })
         );
@@ -195,20 +204,22 @@ const AddListing: React.FC = () => {
     };
     fetchAgents();
 
-    const fetchRegions = async () => {
-      const response = await fetch(
-        "https://api.real-estate-manager.redberryinternship.ge/api/regions"
-      );
-      if (response.status === 200) {
-        const data = await response.json();
+    const getRegions = async () => {
+      try {
+        const data = await fetchRegions();
         setRegions(
-          data.map((item) => {
+          data.map((item: Region) => {
             return { label: item.name, value: item.id };
           })
         );
+      } catch (error) {
+        const errorMessage =
+          (error as Error).message || "An unknown error occurred.";
+        alert(errorMessage);
       }
     };
-    fetchRegions();
+
+    getRegions();
 
     const fetchCities = async () => {
       const response = await fetch(
@@ -229,7 +240,7 @@ const AddListing: React.FC = () => {
         <Controller
           name="is_rental"
           control={control}
-          defaultValue={0}
+          defaultValue={"0"}
           render={({ field }) => (
             <RadionWrapper>
               <StyledLabel htmlFor="deal-type">გარიგების ტიპი*</StyledLabel>
@@ -242,7 +253,7 @@ const AddListing: React.FC = () => {
                     id="sell"
                     name="deal-type"
                     value={0}
-                    checked={field.value === 0}
+                    checked={parseInt(field.value) === 0}
                     onChange={() => field.onChange(0)}
                   />
                 </SingleInputWrapperForRadion>
@@ -254,7 +265,7 @@ const AddListing: React.FC = () => {
                     id="rent"
                     name="deal-type"
                     value={1}
-                    checked={field.value === 1}
+                    checked={parseInt(field.value) === 1}
                     onChange={() => field.onChange(1)}
                   />
                 </SingleInputWrapperForRadion>
@@ -315,7 +326,7 @@ const AddListing: React.FC = () => {
                       label: item.label,
                     }))}
                     value={regions.find(
-                      (region) => region.value === field.value
+                      (region) => region.value === parseInt(field.value)
                     )}
                     components={{ DropdownIndicator: CustomArrow }}
                     styles={dropDownStyles(Boolean(errors.region_id))}
@@ -350,17 +361,19 @@ const AddListing: React.FC = () => {
                         : undefined
                     }
                     value={{
-                      label: cities?.find(
-                        (item) => item.id === parseInt(field.value)
-                      )?.name,
-                      value: cities?.find(
-                        (item) => item.id === parseInt(field.value)
-                      )?.id,
+                      label:
+                        cities?.find(
+                          (item) => item.id === parseInt(field.value)
+                        )?.name || "",
+                      value:
+                        cities?.find(
+                          (item) => item.id === parseInt(field.value)
+                        )?.id || 0,
                     }}
                     components={{ DropdownIndicator: CustomArrow }}
                     styles={dropDownStyles(Boolean(errors.city_id))}
                     onChange={(option) =>
-                      field.onChange(option ? option?.value : null)
+                      field.onChange(option ? option.value : null)
                     }
                     //menuIsOpen={true}
                   />
@@ -468,7 +481,7 @@ const AddListing: React.FC = () => {
                     label: "აგენტის დამატება",
                     value: 0,
                   },
-                  ...agents?.map((item) => {
+                  ...(agents || []).map((item) => {
                     return {
                       value: item.value,
                       label: item.label,
@@ -585,24 +598,6 @@ const StyledButtonWrapper = styled.div`
   align-items: center;
   gap: 1.5rem;
   margin-top: 6.1rem;
-`;
-
-const CancelButton = styled.button`
-  all: unset;
-  font-size: 1.6rem;
-  font-weight: 500;
-  text-align: center;
-  color: #f93b1d;
-  border: solid 1px #f93b1d;
-  padding: 1.4rem 1.6rem;
-  border-radius: 10px;
-  background-color: #fff;
-`;
-
-const SubmitButton = styled(CancelButton)`
-  background-color: #f93b1d;
-  border: none;
-  color: #fff;
 `;
 
 export default AddListing;

@@ -53,6 +53,12 @@ const AllListing: React.FC = () => {
       }
     };
     fetchListings();
+
+    const filters = localStorage.getItem("filters");
+    if (filters) {
+      const savedFilters: AllFilters = JSON.parse(filters);
+      setAllFilters({ ...savedFilters });
+    }
   }, []);
 
   const filterListings = () => {
@@ -92,6 +98,7 @@ const AllListing: React.FC = () => {
 
   const [isHovering, setIsHovering] = useState<boolean>(false);
 
+  console.log(allFilters);
   return (
     <StyledSection>
       <AddAgent active={active} setActive={setActive} />

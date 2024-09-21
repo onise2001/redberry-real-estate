@@ -5,12 +5,14 @@ import { useForm, SubmitHandler } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
 import { Error } from "../my-styled-components/GlobalStyles";
+import { useRealEstateContext } from "../contexts/RealEstateContext";
 
 interface IFiltersProps {
   setAllFilters: React.Dispatch<React.SetStateAction<AllFilters>>;
   allFilters: AllFilters;
 }
-const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
+const Filters: React.FC<IFiltersProps> = ({ allFilters, setAllFilters }) => {
+  const { fetchRegions } = useRealEstateContext();
   const bedroomRef = useMask({
     mask: "__",
     replacement: { _: /[0-9]/ },
@@ -35,23 +37,19 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
 
   const [regions, setRegions] = useState<Region[]>();
   useEffect(() => {
-    const fetchRegions = async () => {
-      const response = await fetch(
-        "https://api.real-estate-manager.redberryinternship.ge/api/regions"
-      );
-      if (response.status === 200) {
-        const data = await response.json();
+    const getRegions = async () => {
+      try {
+        const data = await fetchRegions();
         setRegions(data);
+      } catch (error) {
+        const errorMessage =
+          (error as Error).message || "An unknown error occurred.";
+        alert(errorMessage);
       }
     };
-    fetchRegions();
-
-    const filters = localStorage.getItem("filters");
-    if (filters) {
-      const savedFilters: AllFilters = JSON.parse(filters);
-      setAllFilters({ ...savedFilters });
-    }
+    getRegions();
   }, []);
+
   const filterChange = (filter: number) => {
     if (filterToShow == filters[filter] || !filters[filter]) {
       setFilterToShow("");
@@ -107,6 +105,17 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
     });
   };
 
+  useEffect(() => {
+    setFilterRegions([...allFilters.region]);
+    areaRange.setValue("min", allFilters.area.min);
+    areaRange.setValue("max", allFilters.area.max);
+    priceRange.setValue("min", allFilters.price.min);
+    priceRange.setValue("max", allFilters.price.max);
+    setBedroomsNum(allFilters.bedrooms);
+  }, [allFilters]);
+  console.log(allFilters);
+  console.log(filterRegions);
+
   return (
     <StyledFiltersWrapper>
       <SingleFilterWrapper
@@ -137,8 +146,20 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
                         !filterRegions.some((region) => region.id === item.id)
                       ) {
                         setFilterRegions([...filterRegions, item]);
+                      } else {
+                        setFilterRegions(
+                          filterRegions.filter(
+                            (region) => region.id !== item.id
+                          )
+                        );
                       }
                     }}
+                    defaultChecked={allFilters.region.some(
+                      (region) => region.id === item.id
+                    )}
+                    checked={filterRegions.some(
+                      (region) => region.id === item.id
+                    )}
                   />
                   <RegionName>{item.name}</RegionName>
                 </SingleRegionContainer>
@@ -151,6 +172,7 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
                 const updatedState = { ...prev, region: filterRegions };
                 localStorage.setItem("filters", JSON.stringify(updatedState));
                 setFilterToShow("");
+
                 return updatedState;
               });
             }}
@@ -469,13 +491,6 @@ const InputWrapper = styled.form`
 
 const SingleInputWrapper = styled.div`
   position: relative;
-`;
-
-const InputIcon = styled.img`
-  position: absolute;
-  top: 50%;
-  right: 1rem;
-  transform: translateY(-50%);
 `;
 
 const InputText = styled.span`

@@ -1,49 +1,63 @@
-import React, { useState } from "react";
+import { useState, forwardRef, useImperativeHandle } from "react";
 import { useDropzone } from "react-dropzone";
 import styled from "styled-components";
+
+// Custom type for the ref
+export interface DragAndDropRef {
+  reset: () => void;
+}
 
 interface DragAndDropProps {
   onDrop: (acceptedFiles: File) => void;
   $hasError: boolean;
 }
 
-const DragAndDrop: React.FC<DragAndDropProps> = ({ onDrop, $hasError }) => {
-  const [uploadedFile, setUploadedFile] = useState<File | null>(null);
+const DragAndDrop = forwardRef<DragAndDropRef, DragAndDropProps>(
+  ({ onDrop, $hasError }, ref) => {
+    const [uploadedFile, setUploadedFile] = useState<File | null>(null);
 
-  const { getRootProps, getInputProps, isDragActive } = useDropzone({
-    onDrop: (acceptedFiles) => {
-      const file = acceptedFiles[0];
-      if (file) {
-        setUploadedFile(file);
-        onDrop(file);
-      }
-    },
-    accept: { "image/*": [] },
-    multiple: false,
-  });
+    useImperativeHandle(ref, () => ({
+      reset: () => {
+        setUploadedFile(null);
+      },
+    }));
 
-  return (
-    <Container>
-      <DropArea $hasError={$hasError} {...getRootProps()}>
-        <input {...getInputProps()} />
-        {isDragActive ? (
-          <Text>Drop the file here ...</Text>
-        ) : uploadedFile ? (
-          <ImagePreview>
-            <img
-              src={URL.createObjectURL(uploadedFile)}
-              alt="Preview"
-              width="100%"
-            />
-            <p>{uploadedFile.name}</p>
-          </ImagePreview>
-        ) : (
-          <PlusIcon src="/images/upload.png" />
-        )}
-      </DropArea>
-    </Container>
-  );
-};
+    const { getRootProps, getInputProps, isDragActive, open } = useDropzone({
+      onDrop: (acceptedFiles) => {
+        const file = acceptedFiles[0];
+        if (file) {
+          setUploadedFile(file);
+          onDrop(file);
+        }
+      },
+      accept: { "image/*": [] },
+      multiple: false,
+      noClick: true,
+    });
+
+    return (
+      <Container>
+        <DropArea $hasError={$hasError} {...getRootProps()} onClick={open}>
+          <input {...getInputProps()} />
+          {isDragActive ? (
+            <Text>Drop the file here ...</Text>
+          ) : uploadedFile ? (
+            <ImagePreview>
+              <img
+                src={URL.createObjectURL(uploadedFile)}
+                alt="Preview"
+                width="100%"
+              />
+              <p>{uploadedFile.name}</p>
+            </ImagePreview>
+          ) : (
+            <PlusIcon src="/images/upload.png" />
+          )}
+        </DropArea>
+      </Container>
+    );
+  }
+);
 
 const Container = styled.div`
   display: flex;
@@ -57,7 +71,7 @@ const DropArea = styled.div<{ $hasError: boolean }>`
   width: 100%;
   height: 12rem;
   border: ${({ $hasError }) =>
-    $hasError ? " 2px dashed red" : " 2px dashed #cccccc"};
+    $hasError ? "2px dashed red" : "2px dashed #cccccc"};
   border-radius: 10px;
   display: flex;
   align-items: center;
