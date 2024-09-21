@@ -138,6 +138,7 @@ export const Card = styled.div`
 
 export const CardImg = styled.img`
   width: 100%;
+  max-height: 30.5rem;
 `;
 
 export const CardBody = styled.div`
