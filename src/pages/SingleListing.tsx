@@ -52,7 +52,7 @@ export default function SingleListing() {
     };
 
     fetchListing(id || "0");
-  }, []);
+  }, [id]);
 
   const deleteListing = async (id: number) => {
     const response = await fetch(

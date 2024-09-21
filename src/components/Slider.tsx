@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import styled from "styled-components";
 import {
   Address,
@@ -21,7 +21,6 @@ interface ISliderProps {
 
 const Slider: React.FC<ISliderProps> = ({ currentRegionId, currentItemId }) => {
   const cardRef = useRef<HTMLDivElement | null>(null);
-  const navigate = useNavigate();
   const [similarListings, setSimilarListings] = useState<Listing[]>([]);
   const [transformNumber, setTransformNumber] = useState(0);
   const [cardWidth, setCardWidth] = useState(0);
@@ -121,13 +120,10 @@ const Slider: React.FC<ISliderProps> = ({ currentRegionId, currentItemId }) => {
               $isTransitioning={isTransitioning}
             >
               {similarListings.map((listing, index) => (
-                <Card
-                  ref={index === 0 ? cardRef : null}
-                  key={listing.id}
-                  onClick={() => navigate(`/listing/${listing.id}`)}
-                >
+                <Card ref={index === 0 ? cardRef : null} key={Math.random()}>
                   <Link
                     style={{ textDecoration: "none" }}
+                    onClick={(event) => event.stopPropagation()}
                     to={`/listing/${listing.id}`}
                   >
                     <DealType>
