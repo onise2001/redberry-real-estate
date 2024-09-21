@@ -165,7 +165,7 @@ const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive, setId }) => {
               />
               <ValidationMessage
                 $hasError={Boolean(errors.surname)}
-                $isValid={Boolean(watch("name") && !errors.surname)}
+                $isValid={Boolean(watch("surname") && !errors.surname)}
               >
                 <CheckIcon src="/images/check.png" />
                 მინიმუმ ორი სიმბოლო
