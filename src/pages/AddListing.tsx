@@ -43,9 +43,9 @@ type ListingInputs = {
 
 const AddListing: React.FC = () => {
   const navigate = useNavigate();
-  const { active, setActive, fetchRegions } = useRealEstateContext();
+  const { active, setActive, fetchRegions, agents, setAgents } =
+    useRealEstateContext();
   const [regions, setRegions] = useState<SelectOption[]>([]);
-  const [agents, setAgents] = useState<SelectOption[]>([]);
   const [cities, setCitites] = useState<City[]>([]);
 
   const CustomArrow: React.FC<

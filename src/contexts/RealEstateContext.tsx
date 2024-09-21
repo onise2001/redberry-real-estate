@@ -4,11 +4,15 @@ interface IRealEstateContext {
   active: boolean;
   setActive: React.Dispatch<React.SetStateAction<boolean>>;
   fetchRegions: () => Promise<Region[]>;
+  agents: SelectOption[];
+  setAgents: React.Dispatch<React.SetStateAction<SelectOption[]>>;
 }
 const RealEsateContex = createContext<IRealEstateContext>({
   active: false,
   setActive: () => {},
   fetchRegions: async () => [] as Region[],
+  agents: [],
+  setAgents: () => [],
 });
 export default function RealEstateContextProvider({
   children,
@@ -28,9 +32,17 @@ export default function RealEstateContextProvider({
       throw new Error("Something went wrong while fetching Regions");
     }
   };
+  const [agents, setAgents] = useState<SelectOption[]>([
+    {
+      value: 0,
+      label: "",
+    },
+  ]);
 
   return (
-    <RealEsateContex.Provider value={{ active, setActive, fetchRegions }}>
+    <RealEsateContex.Provider
+      value={{ active, setActive, fetchRegions, agents, setAgents }}
+    >
       {children}
     </RealEsateContex.Provider>
   );

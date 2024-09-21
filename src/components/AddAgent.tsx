@@ -18,6 +18,7 @@ import {
 import { useForm, SubmitHandler, Controller } from "react-hook-form";
 import { yupResolver } from "@hookform/resolvers/yup";
 import * as yup from "yup";
+import { useRealEstateContext } from "../contexts/RealEstateContext";
 
 interface IAddAgentProps {
   active: boolean;
@@ -33,6 +34,7 @@ type AgentInputs = {
 };
 
 const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
+  const { setAgents } = useRealEstateContext();
   const schema = yup.object({
     name: yup.string().min(2, "error").required(),
     surname: yup.string().min(2).required(),
@@ -84,6 +86,11 @@ const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
       }
     );
     if (response.status === 201) {
+      const data = await response.json();
+      setAgents((prev) => [
+        ...prev,
+        { value: data.id, label: `${data.name} ${data.surname}` },
+      ]);
       reset();
       setActive(false);
     } else {
@@ -101,12 +108,10 @@ const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
     addAgent(formData);
   };
 
-  //console.log(errors.avatar?.message);
-
   const avatarInputRef = useRef<DragAndDropRef>(null);
 
   const handleReset = () => {
-    reset(); // Reset form fields
+    reset();
     if (avatarInputRef.current) {
       avatarInputRef.current.reset();
     }
