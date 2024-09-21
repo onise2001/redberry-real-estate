@@ -37,17 +37,20 @@ const Slider: React.FC<ISliderProps> = ({ currentRegionId, currentItemId }) => {
           ...data,
           data[0],
         ];
+
         setSimilarListings(
-          listingsWithDuplicates.filter(
-            (item) =>
+          listingsWithDuplicates.filter((item) => {
+            return (
               item.city.region_id === currentRegionId &&
               item.id !== currentItemId
-          )
+            );
+          })
         );
       }
     };
-
-    fetchListings();
+    if (currentRegionId !== 0) {
+      fetchListings();
+    }
   }, []);
 
   useEffect(() => {

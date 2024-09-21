@@ -15,24 +15,29 @@ import {
   Title,
   StyledForm,
   FormContainer,
+  WhiteButton,
+  OrangeButton,
 } from "../my-styled-components/GlobalStyles";
+import { useRealEstateContext } from "../contexts/RealEstateContext";
+import AddAgent from "../components/AddAgent";
 
 type ListingInputs = {
   address: string;
   description: string;
   zip_code: string;
-  price: number;
-  area: number;
-  bedrooms: number;
-  is_rental: number;
+  price: string;
+  area: string;
+  bedrooms: string;
+  is_rental: string;
   image: File;
-  city_id: number;
-  region_id: number;
-  agent_id: number;
+  city_id: string;
+  region_id: string;
+  agent_id: string;
 };
 
 const AddListing: React.FC = () => {
   const navigate = useNavigate();
+  const { active, setActive } = useRealEstateContext();
   const [regions, setRegions] = useState<SelectOption[]>([]);
   const [agents, setAgents] = useState<SelectOption[]>([]);
   const [cities, setCitites] = useState<City[]>([]);
@@ -135,6 +140,10 @@ const AddListing: React.FC = () => {
     resolver: yupResolver(schema),
     mode: "all",
   });
+
+  const agent_id = watch("agent_id");
+  // console.log(agent_id);
+  // console.log(agents.find((item) => item.value === parseInt(agent_id)));
 
   const region = watch("region_id");
   const addListing = async (formData) => {
@@ -329,9 +338,11 @@ const AddListing: React.FC = () => {
                     {...field}
                     placeholder="ქალაქი"
                     options={
-                      region !== 0
+                      region !== "0"
                         ? cities
-                            ?.filter((item) => item.region_id === region)
+                            ?.filter(
+                              (item) => item.region_id === parseInt(region)
+                            )
                             .map((item) => ({
                               value: item.id,
                               label: item.name,
@@ -339,10 +350,12 @@ const AddListing: React.FC = () => {
                         : undefined
                     }
                     value={{
-                      label: cities?.find((item) => item.id === field.value)
-                        ?.name,
-                      value: cities?.find((item) => item.id === field.value)
-                        ?.id,
+                      label: cities?.find(
+                        (item) => item.id === parseInt(field.value)
+                      )?.name,
+                      value: cities?.find(
+                        (item) => item.id === parseInt(field.value)
+                      )?.id,
                     }}
                     components={{ DropdownIndicator: CustomArrow }}
                     styles={dropDownStyles(Boolean(errors.city_id))}
@@ -450,16 +463,42 @@ const AddListing: React.FC = () => {
               <Select<SelectOption>
                 {...field}
                 placeholder="აირჩიე"
-                options={agents?.map((item) => {
-                  return {
-                    value: item.value,
-                    label: item.label,
-                  };
-                })}
-                value={agents.find((item) => item.value === field.value)}
+                options={[
+                  {
+                    label: "აგენტის დამატება",
+                    value: 0,
+                  },
+                  ...agents?.map((item) => {
+                    return {
+                      value: item.value,
+                      label: item.label,
+                    };
+                  }),
+                ]}
                 components={{ DropdownIndicator: CustomArrow }}
                 styles={dropDownStyles(Boolean(errors.agent_id))}
-                onChange={(option) => field.onChange(option?.value)}
+                onChange={(option) => {
+                  if (option?.value === 0) {
+                    setActive(true);
+                  } else {
+                    field.onChange(option?.value);
+                  }
+                }}
+                formatOptionLabel={(option) =>
+                  option.value === 0 ? (
+                    <div style={{ display: "flex", alignItems: "center" }}>
+                      <img
+                        src="/images/upload.png"
+                        alt={option.label}
+                        style={{ width: 20, height: 20, marginRight: 10 }}
+                      />
+                      <span>{option.label}</span>
+                    </div>
+                  ) : (
+                    option.label // default rendering for other options
+                  )
+                }
+                value={agents.find((item) => item.value === parseInt(agent_id))}
                 //menuIsOpen={true}
               />
             )}
@@ -467,17 +506,18 @@ const AddListing: React.FC = () => {
         </SingleInputWrapper>
 
         <StyledButtonWrapper>
-          <CancelButton
+          <WhiteButton
             type="button"
             onClick={() => {
               navigate("/");
             }}
           >
             გაუქმება
-          </CancelButton>
-          <SubmitButton type="submit">დაამატე ლისტინგი</SubmitButton>
+          </WhiteButton>
+          <OrangeButton type="submit">დაამატე ლისტინგი</OrangeButton>
         </StyledButtonWrapper>
       </StyledForm>
+      <AddAgent active={active} setActive={setActive} />
     </FormContainer>
   );
 };

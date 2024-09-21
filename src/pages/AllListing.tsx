@@ -2,7 +2,8 @@ import React, { useEffect, useState } from "react";
 import { styled } from "styled-components";
 import Filters from "../components/Filters";
 import AddAgent from "../components/AddAgent";
-import { useNavigate, Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
+import { useRealEstateContext } from "../contexts/RealEstateContext";
 import {
   OrangeButton,
   WhiteButton,
@@ -11,10 +12,11 @@ import {
 
 const AllListing: React.FC = () => {
   const navigate = useNavigate();
-  const [active, setActive] = useState<boolean>(false);
+  //const [active, setActive] = useState<boolean>(false);
+  const { active, setActive } = useRealEstateContext();
 
   const [listings, setListings] = useState<Listing[]>([]);
-  const [filteredListings, setFilteredListings] = useState<Listingp[]>([]);
+
   const [allFilters, setAllFilters] = useState<AllFilters>({
     region: [],
     area: { min: "", max: "" },
@@ -46,45 +48,41 @@ const AllListing: React.FC = () => {
 
   const filterListings = () => {
     return listings.filter((item) => {
-      let filtered = true;
-      if (allFilters.region.length > 0) {
-        if (!regionIds.includes(item.city.region_id)) filtered = false;
-      }
-      if (allFilters.area.min && allFilters.area.max) {
-        if (
-          !(
-            item.area >= parseInt(allFilters.area.min) &&
-            item.area <= parseInt(allFilters.area.max)
-          )
-        ) {
-          filtered = false;
-        }
+      let satisfiesFilter = false;
+
+      if (
+        (allFilters.region.length > 0 &&
+          regionIds.includes(item.city.region_id)) ||
+        (allFilters.area.min &&
+          allFilters.area.max &&
+          item.area >= parseInt(allFilters.area.min) &&
+          item.area <= parseInt(allFilters.area.max)) ||
+        (allFilters.price.min &&
+          allFilters.price.max &&
+          item.price >= parseInt(allFilters.price.min) &&
+          item.price <= parseInt(allFilters.price.max)) ||
+        (allFilters.bedrooms && item.bedrooms === parseInt(allFilters.bedrooms))
+      ) {
+        satisfiesFilter = true;
       }
 
-      if (allFilters.price.min && allFilters.price.max) {
-        if (
-          !(
-            item.price >= parseInt(allFilters.price.min) &&
-            item.price <= parseInt(allFilters.price.max)
-          )
-        ) {
-          filtered = false;
-        }
+      if (
+        !(allFilters.region.length > 0) &&
+        !allFilters.area.min &&
+        !allFilters.area.max &&
+        !allFilters.price.min &&
+        !allFilters.price.max &&
+        !allFilters.bedrooms
+      ) {
+        satisfiesFilter = true;
       }
 
-      if (allFilters.bedrooms) {
-        if (!(item.bedrooms === parseInt(allFilters.bedrooms))) {
-          filtered = false;
-        }
-      }
-
-      return filtered;
+      return satisfiesFilter;
     });
   };
 
   const [isHovering, setIsHovering] = useState<boolean>(false);
 
-  console.log(listings);
   return (
     <StyledSection>
       <AddAgent active={active} setActive={setActive} />

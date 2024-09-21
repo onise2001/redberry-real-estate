@@ -2,10 +2,11 @@ import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
 import "./index.css";
 import { createBrowserRouter, RouterProvider } from "react-router-dom";
-import Layout from "./pages/Layout.tsx";
+import Layout from "./layouts/Layout.tsx";
 import AllListing from "./pages/AllListing.tsx";
 import AddListing from "./pages/AddListing.tsx";
 import SingleListing from "./pages/SingleListing.tsx";
+import RealEstateContextProvider from "./contexts/RealEstateContext.tsx";
 
 const router = createBrowserRouter([
   {
@@ -30,6 +31,8 @@ const router = createBrowserRouter([
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <RouterProvider router={router} />
+    <RealEstateContextProvider>
+      <RouterProvider router={router} />
+    </RealEstateContextProvider>
   </StrictMode>
 );

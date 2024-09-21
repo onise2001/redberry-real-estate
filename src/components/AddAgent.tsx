@@ -103,20 +103,22 @@ const AddAgent: React.FC<IAddAgentProps> = ({ active, setActive }) => {
     addAgent(formData);
   };
 
-  console.log(errors.avatar?.message);
+  //console.log(errors.avatar?.message);
 
   return (
     <StyledPopUpSection
       id="popup"
       $active={active}
-      onClick={(event) => {
-        if (event.target.id === "popup") {
-          reset();
-          setActive(false);
-        }
+      onClick={() => {
+        reset();
+        setActive(false);
       }}
     >
-      <FormContainer>
+      <FormContainer
+        onClick={(event) => {
+          event.stopPropagation();
+        }}
+      >
         <Title>აგენტის დამატება</Title>
         <StyledForm onSubmit={handleSubmit(submit)}>
           <Row>

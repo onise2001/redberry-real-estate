@@ -14,10 +14,25 @@ export default function SingleListing() {
   const navigate = useNavigate();
   const [showDelete, setShowDelete] = useState<boolean>(false);
 
-  const [listing, setListing] = useState<Listing>();
+  const [listing, setListing] = useState<Listing>({
+    id: 0,
+    address: "",
+    description: "",
+    zip_code: "",
+    price: 0,
+    area: 0,
+    bedrooms: 0,
+    is_rental: 10,
+    image: "",
+    city_id: 0,
+    city: { id: 0, name: "", region_id: 0, region: { id: 0, name: "" } },
+    agent_id: 0,
+    agent: { id: 0, name: "", surname: "", email: "", phone: "", avatar: "" },
+    created_at: "",
+  });
 
   useEffect(() => {
-    const fetchListing = async (id: string | undefined) => {
+    const fetchListing = async (id: string) => {
       const response = await fetch(
         `https://api.real-estate-manager.redberryinternship.ge/api/real-estates/${id}`,
         {
@@ -146,10 +161,12 @@ export default function SingleListing() {
         </DeleteContainer>
       </StyledPopUpSection>
       {/* <CreatedAt>{`გამოქვეყნების თარიღი ${listing?.created_at}`}</CreatedAt> */}
-      <Slider
-        currentRegionId={listing?.city.region_id}
-        currentItemId={listing?.id}
-      />
+      {listing?.city.region_id !== 0 ? (
+        <Slider
+          currentRegionId={listing?.city.region_id}
+          currentItemId={listing.id}
+        />
+      ) : null}
     </StyledSection>
   );
 }
@@ -182,7 +199,7 @@ const BackImage = styled.img`
 `;
 
 const ListingImage = styled.img`
-  max-width: 83rem;
+  width: 83rem;
 `;
 
 const ListingInfoWrapper = styled.div`

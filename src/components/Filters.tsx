@@ -9,7 +9,6 @@ import { Error } from "../my-styled-components/GlobalStyles";
 interface IFiltersProps {
   setAllFilters: React.Dispatch<React.SetStateAction<AllFilters>>;
   allFilters: AllFilters;
-  
 }
 const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
   const bedroomRef = useMask({
@@ -52,7 +51,6 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
       const savedFilters: AllFilters = JSON.parse(filters);
       setAllFilters({ ...savedFilters });
     }
-    console.log("Remounted");
   }, []);
   const filterChange = (filter: number) => {
     if (filterToShow == filters[filter] || !filters[filter]) {
@@ -109,19 +107,23 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
     });
   };
 
-  console.log(priceRange.formState.errors);
   return (
     <StyledFiltersWrapper>
-      <SingleFilterWrapper $active={filterToShow == filters[0]}>
-        <FilterText
-          onClick={() => {
-            filterChange(0);
-          }}
+      <SingleFilterWrapper
+        $active={filterToShow == filters[0]}
+        onClick={() => {
+          filterChange(0);
+        }}
+      >
+        <FilterText>რეგიონი</FilterText>
+        <ArrowIcon
+          $dropped={filterToShow == filters[0]}
+          src="/images/arrow.png"
+        />
+        <RegionsPopup
+          $active={filterToShow == filters[0]}
+          onClick={(event) => event.stopPropagation()}
         >
-          რეგიონი
-        </FilterText>
-        <ArrowIcon src="/images/arrow.png" />
-        <RegionsPopup $active={filterToShow == filters[0]}>
           <FilterTitle>რეგიონის მიხედვით</FilterTitle>
           <RegionsContainer>
             {regions?.map((item) => {
@@ -157,18 +159,21 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
           </ChooseButton>
         </RegionsPopup>
       </SingleFilterWrapper>
-      <SingleFilterWrapper $active={filterToShow === filters[1]}>
-        <FilterText
-          onClick={() => {
-            filterChange(1);
-          }}
-        >
-          საფასო კატეგორია
-        </FilterText>
-        <ArrowIcon src="/images/arrow.png" />
+      <SingleFilterWrapper
+        $active={filterToShow === filters[1]}
+        onClick={() => {
+          filterChange(1);
+        }}
+      >
+        <FilterText>საფასო კატეგორია</FilterText>
+        <ArrowIcon
+          $dropped={filterToShow === filters[1]}
+          src="/images/arrow.png"
+        />
         <PriceAndAreaPopup
           $active={filterToShow === filters[1]}
           onSubmit={priceRange.handleSubmit(priceSubmit)}
+          onClick={(event) => event.stopPropagation()}
         >
           <FilterTitle>ფასის მიხედვით</FilterTitle>
           <InputWrapper>
@@ -224,7 +229,10 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
         >
           ფართობი
         </FilterText>
-        <ArrowIcon src="/images/arrow.png" />
+        <ArrowIcon
+          $dropped={filterToShow === filters[2]}
+          src="/images/arrow.png"
+        />
         <PriceAndAreaPopup
           $active={filterToShow === filters[2]}
           onSubmit={areaRange.handleSubmit(areaSubmit)}
@@ -254,7 +262,12 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
               </PriceTitle>
               {areas.map((item) => {
                 return (
-                  <StyledLi key={Math.random()}>
+                  <StyledLi
+                    key={Math.random()}
+                    onClick={() => {
+                      areaRange.setValue("min", item.replace(",", ""));
+                    }}
+                  >
                     {`${item} `}მ<sup>2</sup>
                   </StyledLi>
                 );
@@ -266,7 +279,12 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
               </PriceTitle>
               {areas.map((item) => {
                 return (
-                  <StyledLi key={Math.random() * 2}>
+                  <StyledLi
+                    key={Math.random() * 2}
+                    onClick={() => {
+                      areaRange.setValue("max", item.replace(",", ""));
+                    }}
+                  >
                     {`${item} `}მ<sup>2</sup>
                   </StyledLi>
                 );
@@ -284,7 +302,10 @@ const Filters: React.FC<IFiltersProps> = ({ setAllFilters, allFilters }) => {
         >
           საძინებლების რაოდენობა
         </FilterTitle>
-        <ArrowIcon src="/images/arrow.png" />
+        <ArrowIcon
+          $dropped={filterToShow == filters[3]}
+          src="/images/arrow.png"
+        />
         <BedroomPopup $active={filterToShow === filters[3]}>
           <FilterTitle>საძინებლების რაოდენობა</FilterTitle>
           <BedroomInput
@@ -346,7 +367,10 @@ const FilterText = styled.span`
   color: #021526;
 `;
 
-const ArrowIcon = styled.img``;
+const ArrowIcon = styled.img<{ $dropped: boolean }>`
+  transform: ${({ $dropped }) =>
+    $dropped ? "rotate(180deg)" : "rotate(0deg)"};
+`;
 
 const FilterTitle = styled.h2`
   font-size: 1.6rem;
